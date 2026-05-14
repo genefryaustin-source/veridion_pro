@@ -1,0 +1,44 @@
+Have You Tried These New Features?
+We announced 10 new features, have you tried them out? ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏
+We announced 10 new features, have you tried them out?  
+
+----------------------------------
+Have You Tried These New Features?
+----------------------------------
+
+We've released 10 new features in the last month to change your Swish experience
+--------------------------------------------------------------------------------
+
+In case you missed it here's a quick list of the 10 new features Swish released in the last few weeks. These features will make hosting tournaments, leagues, and round robins easier and more customizable no matter the size of your group.
+
+✍️ Edit Matchups in Pool & Bracket Play
+🚀 Send DUPR scores Each Round
+🏆 Send scores to DUPR each week in Team Format Leagues
+🔥 2/3 Scoring in Bracket Play
+✅ Score Verification for Non-DUPR Events
+👉 Clickable URLs in Game Description
+👤 True Singles Format in Game Creation
+🛟 League Editing Safeguards
+✏️ Edit # of players/court in a Ladder League post game creation
+👩‍✈️ Add a Co-Admin to your game to help manage your event
+
+Send DUPR Scores After Every Round & Resend Unverified Scores
+-------------------------------------------------------------
+
+ 
+
+Want to play a few rounds of a match this week and finish the last few rounds next week? Accidentally sent scores before verifying all of them? Swish has your back.
+
+Now you can send scores to DUPR after each round of play is verified, making team formats even more customizable to how you would like to play and schedule your time. 
+
+This feature also allows for unverified scores to be sent a second (or third or fourth) time. You will see a timestamp of the last time your scores are sent. Just verify the previously unverified scores and hit "Send Scores to DUPR" to send again. No more manual DUPR entry!
+
+Get Your Singles Game On
+------------------------
+
+Swish now gives you the choice to make Set Partner events singles or doubles events. This gives you a true singles layout and shuffles your matchups accordingly. Stretch your legs and give it a try!
+
+Thanks so much for your support and stay tuned for more details on these features and more!
+
+Best,
+The Swish Team

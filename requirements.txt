@@ -1,0 +1,95 @@
+# -----------------------------
+# Core App
+# -----------------------------
+streamlit==1.37.0
+pandas==2.2.2
+numpy==1.26.4
+
+# -----------------------------
+# Visualization
+# -----------------------------
+plotly==5.22.0
+
+# -----------------------------
+# Slack Integration
+# -----------------------------
+slack-sdk==3.27.1
+slack-bolt==1.18.1
+
+# -----------------------------
+# HTTP / API
+# -----------------------------
+requests==2.32.3
+
+# -----------------------------
+# File Processing (Evidence extraction)
+# -----------------------------
+pypdf==4.2.0
+python-docx==1.1.2
+
+# -----------------------------
+# Data + Utilities
+# -----------------------------
+python-dateutil==2.9.0.post0
+
+# -----------------------------
+# Background / Concurrency
+# -----------------------------
+concurrent-log-handler==0.9.25
+
+# -----------------------------
+# Streamlit Enhancements
+# -----------------------------
+streamlit-autorefresh==1.0.1
+
+# -----------------------------
+# Caching
+# -----------------------------
+diskcache==5.6.3
+
+# -----------------------------
+# Database (prepping for Postgres later)
+# -----------------------------
+sqlalchemy==2.0.32
+
+# -----------------------------
+# Config / Environment
+# -----------------------------
+python-dotenv==1.0.1
+
+# -----------------------------
+# Logging (optional but recommended)
+# -----------------------------
+loguru==0.7.2
+
+
+PyPDF2==3.0.1
+
+reportlab==4.2.2
+
+# -----------------------------
+# Google / Gmail Integration
+# -----------------------------
+google-auth==2.34.0
+google-auth-oauthlib==1.2.1
+google-api-python-client==2.144.0
+
+cryptography
+
+pdfplumber
+
+beautifulsoup4
+
+pytesseract
+Pillow
+pdf2image
+
+# https://github.com/UB-Mannheim/tesseract/wiki
+# https://github.com/oschwartz10612/poppler-windows/releases
+# pdftoppm -h
+
+openpyxl
+
+networkx
+pyvis
+

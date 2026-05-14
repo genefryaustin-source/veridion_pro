@@ -1,0 +1,42 @@
+# ============================
+        # 🛠 ALERT DEBUG LOG
+        # ============================
+        st.subheader("🛠 Alert Debug Log")
+
+        with storage.ledger._connect() as con:
+            con.execute("""
+                CREATE TABLE IF NOT EXISTS ui_debug_log (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    created_at_ms INTEGER,
+                    message TEXT
+                )
+            """)
+
+            debug_rows = con.execute("""
+                SELECT
+                    datetime(created_at_ms / 1000, 'unixepoch') as created_at,
+                    message
+                FROM ui_debug_log
+                ORDER BY id DESC
+                LIMIT 50
+            """).fetchall()
+
+        if debug_rows:
+            debug_df = pd.DataFrame(
+                [dict(r) for r in debug_rows]
+            )
+
+            debug_df = debug_df.rename(columns={
+                "created_at": "Created",
+                "message": "Message"
+            })
+
+            st.dataframe(debug_df, use_container_width=True)
+        else:
+            st.info("No debug messages yet.")
+
+        if st.button("🧹 Clear Debug Log"):
+            with storage.ledger._connect() as con:
+                con.execute("DELETE FROM ui_debug_log")
+                con.commit()
+            st.rerun()

@@ -1,0 +1,20 @@
+The May $100k Sweepstakes is LIVE 🚀
+Simply opt in to get your first entry. ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏
+Simply opt in to get your first entry.
+    <html>
+      <head>
+        <style>
+          html,body {margin: 0;}
+          body {
+            font-size: 16px;
+            line-height: 1.5;
+            font-family: Arial, Helvetica sans-serif;
+            max-width: 500px;
+            margin: auto;
+            white-space: pre-wrap;
+            padding: 10px;
+          }
+        </style>
+      </head>
+      <body></body>
+    </html>

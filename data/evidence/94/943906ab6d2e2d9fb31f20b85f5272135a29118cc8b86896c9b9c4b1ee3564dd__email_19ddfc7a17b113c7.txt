@@ -1,0 +1,49 @@
+The Hyperliquid public API is good. Here's what it can't do - Edition #56
+Six things you can build on Hyperliquid with GoldRush that the public API simply won&#39;t support at scale ͏​ ͏​ ͏​ ͏​ ͏​ ͏​ ͏​ ͏​ ͏​ ͏​ ͏​ ͏​ ͏​ ͏​ ͏​ ͏​ ͏​ ͏​ ͏​ ͏​ ͏​ ͏​ ͏​ ͏​ ͏​ ͏​ ͏​ ͏​ ͏​ ͏​ ͏​
+Six things you can build on Hyperliquid with GoldRush that the public API simply won't support at scale
+͏   ­͏   ­͏   ­͏   ­͏   ­͏   ­͏   ­͏   ­͏   ­͏   ­͏   ­͏   ­͏   ­͏   ­͏   ­͏   ­͏   ­͏   ­͏   ­͏   ­͏   ­͏   ­͏   ­͏   ­͏   ­͏
+  ­͏   ­͏   ­͏   ­͏   ­͏   ­͏   ­͏   ­͏   ­͏   ­͏   ­͏   ­͏   ­͏   ­͏   ­͏   ­͏   ­͏   ­͏   ­͏   ­͏   ­͏   ­͏   ­͏   ­͏   ­͏   ­͏
+  ­͏   ­͏   ­͏   ­͏   ­͏   ­͏   ­͏   ­͏   ­͏   ­͏   ­͏   ­͏   ­͏   ­͏   ­͏   ­͏   ­͏   ­͏   ­͏   ­͏   ­͏   ­͏   ­͏   ­͏   ­
+The public Hyperliquid API gets you started. GoldRush is what you reach for when you're ready to go further.
+The public info API is free and easy to start with. That's also why every Hyperliquid dashboard looks the same - same endpoints,
+same chart, same fills tab that cuts off at 10,000 rows.
+When everyone's using the same data, you're competing on UI alone. Here are six things GoldRush lets you build that the public API
+doesn't cover.
+1. Track thousands of wallets in real time - no rate limits
+The public WebSocket caps you at 1,000 subscriptions per IP. Hit a few thousand users, and you're already sharding IPs and queuing
+requests.
+GoldRush scales to thousands of concurrent wallet subscriptions on a single connection, with no rate limits.
+Build: copy-trading, whale alerts, live position feeds, cohort dashboards.
+2. Get liquidations, vaults, and staking - already decoded
+The public API gives you raw data. You write the decoder.
+GoldRush delivers everything pre-decoded - liquidations with full position details, vault deposits and withdrawals, staking
+rewards, delegation events, borrow/lend activity. All typed and ready to use.
+Build: liquidation tapes, risk warnings, vault leaderboards, staking dashboards.
+3. Full trading history - back to July 27, 2025
+Active traders hit the userFills cap in weeks. When their PnL chart starts mid-quarter, they notice.
+GoldRush has every fill, funding payment, and ledger event from July 27, 2025 onwards on HyperCore. HyperEVM coverage goes all the
+way back to Genesis.
+Build: lifetime PnL, tax exports, year-in-review features.
+4. Live candles for every HIP-3 market
+The public API is poll-based and doesn't handle HIP-3 markets well. Finding new markets means stitching IDs by hand.
+GoldRush streams live OHLCV data for every HIP-3 market natively - the moment they go live.
+Build: new markets tabs, multi-chart dashboards, and deployer leaderboards.
+5. Hyperliquid data straight into your warehouse
+Building a data pipeline on the public API means writing your own ETL, backfill, schema, and retry logic from scratch.
+GoldRush's Pipeline API delivers normalized Hyperliquid tables - fills, trades, orders, funding, deposits, withdrawals - directly
+into ClickHouse or BigQuery.
+Build: user analytics, churn models, A/B testing on trading behavior.
+6. Cover HyperEVM and every other chain too
+The public API doesn't cover HyperEVM or any other chain your users hold assets on.
+GoldRush covers HyperEVM with full EVM data - balances, transfers, NFTs, approvals - plus 100+ other chains, all under one API
+key.
+Build: full wallet tabs, approvals revoke flows, cross-chain portfolio views.
+If you're building anything on Hyperliquid, sign up for GoldRush. It's free for the first two weeks, then $10/month thereafter -
+https://goldrush.dev/platform/auth/register/
+Join our Growing Community
+https://x.com/Covalent_HQ
+https://discord.com/invite/covalentHQ
+https://t.me/CovalentHQ
+You are receiving this email because you opted-in to receive updates from Covalent
+Covalent, 1103 - 4720 Kingsway St. Burnaby, BC V5H 4N2, Canada
+Unsubscribe [https://app.loops.so/unsubscribe/cmolusiph0v7r01981ealdxuj/bd424ebc20512c991d4294ced1bffa4738ade5c26416844aaca4f642b47070e9f01649aafaecf2d603a6a88347413f162de4efa865eec5c74c2270cd]
