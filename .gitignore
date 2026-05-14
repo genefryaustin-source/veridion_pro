@@ -24,3 +24,36 @@ ENV/
 # OS
 .DS_Store
 Thumbs.db
+
+
+git add .gitignore
+git commit -m "Resolve merge conflict in .gitignore"
+git push -u origin main
+
+# Google OAuth
+client_secrets.json
+credentials.json
+token.json
+*.json  # ← only if you want to ignore ALL json, otherwise be specific
+
+Best Daily Sync Workflow (Recommended)
+Run these commands every time you work:
+
+
+# 1. Go to your project folder
+cd C:\Veridion Pro
+
+# 2. Switch to main branch (if you're not already on it)
+git checkout main
+
+# 3. Pull latest changes from GitHub (IMPORTANT - do this first!)
+git pull origin main
+
+# 4. Make your changes (edit code, add files, etc.)
+
+# 5. When you're ready to save:
+git add .                    # or git add specific-file.py
+git commit -m "Short description of what you changed"
+
+# 6. Push to GitHub
+git push origin main
