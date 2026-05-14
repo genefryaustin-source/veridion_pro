@@ -1,0 +1,118 @@
+New ways to govern (and enable) AI
+This is how we&#39;re helping everyone build safely across their AI workflows. ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏
+New ways to govern (and enable) AI  This is how we're helping everyone build 
+safely across their AI workflows.   ͏  ͏  ͏  ͏  ͏  ͏  ͏  ͏  ͏  ͏  ͏  ͏  ͏  ͏  ͏ 
+ ͏  ͏  ͏  ͏  ͏  ͏  ͏  ͏  ͏  ͏  ͏  ͏  ͏  ͏  ͏  ͏  ͏  ͏  ͏  ͏  ͏  ͏  ͏  ͏  ͏  ͏ 
+ ͏  ͏  ͏  ͏  ͏  ͏  ͏  ͏  ͏  ͏  ͏  ͏  ͏  ͏  ͏  ͏  ͏  ͏  ͏ 
+ <https://zapier.com/?utm_content=logo-header> 
+ Log in  <https://zapier.com/app/login?utm_content=logo-header> 
+ April 2026 Edition 
+Zapier's latest 
+Govern AI everywhere, support your builders, and power up your AI coding 
+agents. 
+ What's new 
+ <https://zapier.com/govern> 
+Govern AI with one set of rules 
+With AI, everyone in your company is a builder—and that calls for a new kind 
+of governance. So we launched a ton of features: Agents and MCP for Enterprise, 
+Workspaces, and much more. 
+ See what's new  <https://zapier.com/govern> 
+ <https://www.loom.com/share/ed3b54e496a74f57ab71125a3b06f3f6> 
+Hand off pre-approved Zaps 
+You can now create guided templates with pre-populated fields, custom help 
+text, and locked controls. Your best automations are no longer stuck with your 
+most experienced builders. 
+ Watch a demo  <https://www.loom.com/share/ed3b54e496a74f57ab71125a3b06f3f6> 
+ <https://zapier.com/blog/zapier-sdk-guide/> 
+Run 30K app actions from your code 
+Free and in open beta, the Zapier SDK gives AI coding agents like Cursor, 
+Codex, and Claude Code governed access to more than 9,000 apps. No need to 
+build or maintain separate integrations. 
+ Set it up  <https://zapier.com/blog/zapier-sdk-guide/> 
+ Featured articles 
+ <https://zapier.com/blog/zapier-mcp-vs-sdk/> 
+Zapier MCP vs. SDK: What's the difference? 
+Zapier SDK. Zapier MCP. Which one should you choose? And can you use both? 
+This new feature guide makes the choice clear, whether you're technical or not. 
+Get the answers →  <https://zapier.com/blog/zapier-mcp-vs-sdk//> 
+ <https://zapier.com/benchmarks> 
+Introducing AutomationBench 
+Zapier now has a benchmarking tool for measuring the efficacy of AI models. 
+Learn how major models perform on the messy, complicated tasks your business 
+actually relies on. 
+View the leaderboard →  <https://zapier.com/benchmarks> 
+ Automations picked for you 
+Start building with one click 
+Each of these templates drops you straight into the Zap editor, with your 
+trigger and action apps pre-selected and key fields pre-mapped. And they're 
+fully customizable.
+ Try one out now: 
+Send tomorrow's schedule digest to support operations reps →  
+<https://zapier.com/templates/details/send-tomorrow-s-schedule-digest-to-support-operations-reps>
+Add web contact to support leads and notify team →  
+<https://zapier.com/templates/details/add-web-contact-to-support-leads-and-notify-team>
+Add reservation emails as calendar bookings for support →  
+<https://zapier.com/templates/details/add-reservation-emails-as-calendar-bookings-for-support>
+Generate concise support incident summaries from feed alerts →  
+<https://zapier.com/templates/details/generate-concise-support-incident-summaries-from-feed-alerts>
+Create mirrored support events in shared team calendar →  
+<https://zapier.com/templates/details/create-mirrored-support-events-in-shared-team-calendar>
+ Spotlight 
+Better signals for Meta ads: A CAPI workshop 
+Did you catch it live? We partnered with Meta for a hands-on workshop where 
+attendees built a working Conversions API connection between their CRM and 
+Meta, all in under an hour.
+ If you missed it, the recording's ready when you are. Pop in your email to 
+access it and learn how to drive better performance from your campaigns. 
+Get the recording →  
+<https://app.livestorm.co/p/bd7eeb94-8fb6-4ed2-8165-429205f75073/live?s=8011082c-fb3b-453c-837e-409c689640db>
+ New and noteworthy apps 
+ <https://zapier.com/apps/smartchatai/integrations> 
+SmartChatAI 
+SmartChatAI is a no-code AI chatbot that automates customer support and 
+captures leads across your website. Connect it toFacebook Conversions 
+<https://zapier.com/l/meta-conversions-api-crm> so every chatbot conversion 
+automatically sends a signal back to your ad campaigns for free. 
+Explore SmartChatAI integrations →  
+ <https://zapier.com/apps/prospero/integrations> 
+Prospeo 
+Prospeo is a B2B platform for finding and enriching verified contact data. 
+Connect it toLinkedIn Conversions 
+<https://zapier.com/l/linkedin-conversions-integration> so your highest-quality 
+prospects automatically close the loop for free on your campaign measurement. 
+Explore Prospeo integrations →  <https://zapier.com/apps/prospero/integrations>
+ <https://zapier.com/apps/homebase360/integrations> 
+Homebase360 
+Homebase360 is a CRM built for home services businesses. Connect it to Yelp 
+Leads <https://zapier.com/l/yelp-leads-conversions> so every new quote request 
+from Yelp lands in your pipeline automatically, no manual entry required. 
+Explore Homebase360 integrations →  
+ <https://zapier.com/apps/builder-quote/integrations> 
+Builder Quote 
+Builder Quote helps contractors capture and qualify leads for construction 
+projects. Connect it toGoogle Ads <https://zapier.com/l/supercharge-google-ads> 
+so every booked job automatically sends a conversion signal back to your 
+campaigns. 
+Explore Builder Quote integrations →  
+So many updates, so little space! Join the Zapier Community 
+<https://community.zapier.com/product-updates> or visit our Help Center 
+<https://help.zapier.com/hc/en-us/categories/13951101412877-Product-updates> 
+for even more product updates. 
+ <https://zapier.com/?utm_content=footer> 
+ Got a question? Send us a message 
+<https://zapier.com/app/contact-us?utm_content=footer> 
+ <https://www.facebook.com/ZapierApp/> 
+ <https://www.linkedin.com/company/zapier> 
+ <https://twitter.com/zapier> 
+ <https://www.instagram.com/zapier/> 
+ <https://www.youtube.com/@Zapier> 
+ <https://zapier.com/blog/?utm_content=footer> 
+© 2026 Zapier, Inc.
+ All rights reserved.
+548 Market St #62411,
+ San Francisco, CA 94104-5401 <> 
+ You received this email because you're subscribed to the Zapier Blog & 
+Newsletter. 
+Unsubscribe 
+<https://links.zapier.com/s/eh/ce1mKGk0dgHIL7i_-jC7BZkHN4FFsKbNRLEHwheoSwS7yiard36H7tDFfWGQAufqCQFODkvnRP8gAXa9SS_OXaD0ZcJ0q6DR312X-8pKKth898mC28EPcbktEgK6IDoa8a-5iKTNj-9gRqrh-Re9HWrvPjwAxmFq4b_GwaQ69iQQFEIshVyGYffHIFLnAuUu34hbHApmg42M2LjSUSeW8wUWLnNpeWNBFypyV9_VpgqKVwPbiLzdc6jVOyQy0m7R-Z9SBbqFGYJFWyGByq1tqXurf_41kTRsivBxG-KmGw6336MV-5OBpQ2U_laZVuapxUejNGhsKNQnUL3IQzKySb3VkCv_IH7wjN476Nq7PHBpVmmDr0_Ox3tcNFO16hFrDFNGbY8bxu8Si7p7hKvhn6x9ecJlS1CJPSo3hVExIi_V1QkXmC7KRSbTQ_oekliCNiN9_SUBH6I/rJjbumVyxwe-bZ93k3oMul1K3Fkg7vOy/20>
+Privacy policy <https://zapier.com/privacy?utm_content=footer> Contact us 

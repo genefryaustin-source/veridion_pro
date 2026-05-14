@@ -1,0 +1,35 @@
+🎉 First $1M month to creators + big redesign to MCP Configurator
+Apify April updates Hi Gene! This month, creators hit $1M in payouts, we shipped a redesigned MCP Configurator, in-run email verification, and interactive API docs for standby Actors. Plus, new
+Apify April updates 
+ Hi Gene! 
+ This month, creators hit $1M in payouts, we shipped a redesigned MCP Configurator, in-run email verification, and interactive API docs for standby Actors. Plus, new integrations with Dify, Activepieces, and more. 
+ 💵 Monthly creator payouts hit $1M milestone 
+ [Image "1M+challange+2+%281%29.png"] 
+ In March, Apify paid out over $1M to creators in a single month for the first time. A year ago, that number was $222K. That's almost 5x growth in 12 months. 
+ You built that. Creators on Apify are turning Actors into real income - and the market keeps growing. 
+ Which Actor are you gonna build? Start earning. 
+ 🔧 Update: Apify MCP Configurator 
+ [Image "MCP+configurator+%282%29.png"] 
+ The Apify MCP Configurator has been redesigned to make it simpler to connect Apify to any LLM. Pick your Actors, choose your client, get a working config. No manual setup. Works with Claude, Cursor, and any MCP-compatible client. Try it at mcp.apify.com. 
+ 🎉 New integration: Dify
+ [Image "apify+and+dify+%281%29.png"] 
+ Dify just added Apify to its ecosystem. The integration is now live in the Dify Marketplace. It lets you run Actors, fetch dataset results, and trigger Dify workflows when a run finishes. Async and sync are both supported. Setup guide here. 
+ ✉️ Verify emails in the same run you scrape them
+ [Image "MCP+configurator.png"] 
+ Stop paying twice. Once to scrape leads, once to clean them. The new email verification add-on validates every address in the same run across Google Maps, Google Search, and Contact Details Scraper. Campaign-ready lists, straight out of the box. 
+ 📄 Interactive API docs for standby Actors
+ [Image "standby+%281%29.png"] 
+ Standby Actors now have an Endpoints tab with interactive OpenAPI docs. Browse endpoints, inspect schemas, and run live API calls from the browser. Your token is attached automatically - no credential copy-pasting. 
+ Available on Actor detail and Task pages in Console, and on Actor detail pages in Store. Full docs here. 
+ 🧩 New integration: Activepieces
+ [Image "apify+and+dify.png"] 
+ Activepieces is an open-source workflow automation platform, and Apify now has a native piece. Trigger a flow when an Actor run finishes, read dataset results, and pass scraped data straight to CRMs, dashboards, or notifications. No custom code needed. Set it up. 
+ 🛒 Webinar: Don't guess your way into a new market with Shopify 
+ [Image "WEBINAR+Newsletter+%281%29.png"] 
+ Join us May 5 (11am ET / 5pm CET) for a 75-minute live demo on activating a new Shopify market, tracking competitor pricing and reviews with the E-commerce Scraping Tool, and setting up cross-border fulfillment. Live Q&amp;A included, registrants get the recording. Save your spot. 
+ 🍻 PragueCrawl is on May 20 
+ [Image "PragueCrawl_2.png"] 
+ A full day of talks and demos on web scraping, automation, and AI - plus an afterparty with unlimited beer. Speakers from Apify, Massive, Browserbase, and more. Spots are limited, so grab your ticket before they're gone. 
+ 🤝 Connect with 18,000+ developers 
+ [Image "Discord.png"] 
+ Join the conversation on Apify's Discord. Connect and participate in various exclusive events, chat with fellow scraping developers, and touch base with the Apify team.

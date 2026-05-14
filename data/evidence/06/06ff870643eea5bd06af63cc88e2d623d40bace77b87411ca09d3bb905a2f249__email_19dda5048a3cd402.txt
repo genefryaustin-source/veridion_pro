@@ -1,0 +1,74 @@
+7 new services. 3 big features. Try them today. ✨
+IFTTT MCP, DataStore, iOS Shortcuts, and all-new apps to connect! ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏
+IFTTT MCP, DataStore, iOS Shortcuts, and all-new apps to connect!  
+*******************************
+Big updates, bigger automations
+April was a big month. We've been heads down building, and it's time to show you what we've been working on.
+Read the blog ( https://ifttt.com/explore/new-on-ifttt-for-april-2026 )
+Try Pro free today and take your Applets to the next level! ✨
+IFTTT Pro
+20 Applets
+Multi-action Applets
+Webhooks and Twitter Applets
+Fastest Applet speeds
+Increased rate limits
+Customer support ( https://ifttt.com/subscriptions/pro )
+Try Pro free ( https://ifttt.com/subscriptions/pro )
+--------------------
+New apps to automate
+Seven new services just landed. Connect them to your favorite tools in an Applet today.
+Basecamp integrations ( https://ifttt.com/basecamp )
+Microsoft OneDrive automations and integrations ( https://ifttt.com/onedrive )
+monday integrations and automations on IFTTT ( https://ifttt.com/monday )
+Horoscope on IFTTT ( https://ifttt.com/horoscope )
+BulkPublish integrations ( https://ifttt.com/bulkpublish )
+WooCommerce automations and integrations ( https://ifttt.com/woocommerce )
+New services ( https://ifttt.com/explore/new-on-ifttt-for-april-2026 )
+--------------------------------------------
+From advice to action: introducing IFTTT MCP
+Claude is great at telling you what to do, but you're still the one doing it.
+IFTTT MCP changes that by connecting your AI assistant to 1000+ services so it can act, not just advise.
+Learn more about it here:
+⚡ What is IFTTT MCP? ( https://ifttt.com/explore/what-is-ifttt-mcp )
+⚡ How to use the IFTTT MCP with Claude ( https://ifttt.com/explore/how-to-use-ifttt-mcp-with-claude )
+Popular AI Applets trending this month:
+Name new iOS Photos automatically and save to Google Drive ( https://ifttt.com/applets/PL4y8tbg-name-new-ios-photos-automatically-and-save-to-google-drive )
+Automatically generate ChatGPT response to emails when you tag them #ChatGPT ( https://ifttt.com/applets/mnadiqV7-automatically-generate-chatgpt-response-to-emails-when-you-tag-them-chatgpt )
+Add a Spotify track and get notified when you write a Note ( https://ifttt.com/applets/NvThGLBW-add-a-spotify-track-and-get-notified-when-you-write-a-note )
+Email AI meeting summaries from new Google Docs notes ( https://ifttt.com/applets/MUH9vySe-email-ai-meeting-summaries-from-new-google-docs-notes )
+-----------------------------
+iOS Shortcuts just leveled up
+Shortcuts ( https://ifttt.com/ios_shortcuts ) are great for automating things on your iPhone, but they've always been limited to what Apple allows.
+With the new Content ingredient, your Shortcuts can now pass text directly into IFTTT and trigger something meaningful on the other end.
+Try these Applets:
+Close MyQ garage door with a Siri Shortcut ( https://ifttt.com/applets/jwGsdWaM-close-myq-garage-door-with-a-siri-shortcut )
+Get a VoIP Call from IFTTT When an iOS Shortcut Runs ( https://ifttt.com/applets/UtmZ6Ar9-get-a-voip-call-from-ifttt-when-an-ios-shortcut-runs )
+Get a call for important texts ( https://ifttt.com/applets/ZzqKf8Fu-get-a-call-for-important-texts )
+Change the lights when I tap an NFC tag ( https://ifttt.com/applets/XnSJK2vL-change-the-lights-when-i-tap-an-nfc-tag )
+----------------------------------------------
+Meet DataStore: your Applets just got a memory
+DataStore ( https://ifttt.com/explore/introducing-datastore-on-ifttt ) gives your Applets a shared memory, a place to store information that persists between runs and is available across your whole setup.
+A few things DataStore makes possible:
+⚡️ No more 3AM notification floods
+⚡️ Track timestamps and counters across automations
+⚡️ Coordinate multiple Applets like one intelligent system
+There's a lot more to explore on IFTTT this month. Read the full breakdown on our blog.
+See what's new ( https://ifttt.com/explore/new-on-ifttt-for-april-2026 )
+------------------------------
+Users are loving these stories
+* Home screen inspiration: seven widget setups to transform your day ( https://ifttt.com/explore/home-screen-inspiration-with-widgets )
+* Take it easy: automations for a calmer day ( https://ifttt.com/explore/the-chill-automation-collection )
+IFTTT Logo ( https://ifttt.com )
+Download on the App Store ( https://itunes.apple.com/app/apple-store/id660944635?pt=1752682&ct=Customerio-Email-Footers&mt=8 )
+Get it on Google Play ( https://play.google.com/store/apps/details?id=com.ifttt.ifttt&referrer=utm_source%3DCustomerio-Email-Footer )
+TikTok icon ( https://www.tiktok.com/@iftttapp )
+Twitter icon ( https://twitter.com/ifttt )
+YouTube icon ( https://www.youtube.com/c/IFTTTinc )
+Facebook icon ( https://www.facebook.com/ifttt/ )
+Instagram icon ( https://www.instagram.com/iftttapp/?hl=en )
+LinkedIn icon ( https://www.linkedin.com/company/ifttt )
+Privacy policy ( https://ifttt.com ) |
+Unsubscribe ( https://track.customer.io/unsubscribe/dgShvgMDAJKluTKRpbkyAZ3aSTM0O7sXZ_rRS84jjg== ) |
+Update preferences ( https://ifttt.com/settings )
+© 2026 IFTTT, Inc. All rights reserved.
+2261 Market Street #4383, San Francisco, CA 94114

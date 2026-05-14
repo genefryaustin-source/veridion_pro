@@ -1,0 +1,26 @@
+Spin up an agent. 2 hours, free.
+Then Picnic ($20/mo) keeps it running. ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏
+Then Picnic ($20/mo) keeps it running.  
+( https://agents.pinata.cloud/marketplace )
+Pinata ( # )
+WEEKEND PROJECT
+**********************************************
+Spin up an agent. Your first 2 hours are free.
+A hosted AI agent that does real work for you.
+Here are three template from the marketplace to get you started, two minutes to deploy:
+Tempo
+Comes with a Tempo wallet. Fund it, and the agent buys services like web search, image generation, and data enrichment.
+Alchemy
+Queries onchain data, watches wallets, tracks transactions. No infra needed.
+Ampersend
+Reads your files, drafts content, schedules posts.
+Pick one and ship. After 2 hours, Picnic ($20/mo) keeps your agent running.
+Deploy your first agent ( https://agents.pinata.cloud/agents/new/identity )
+Thanks,
+Kyle Tut
+Cofounder and CEO
+x ( https://x.com/pinatacloud )
+linkedIn ( https://www.youtube.com/@pinatacloud )
+3555 Farnam Street, Suite 905
+Omaha, NE 68131, US
+Unsubscribe ( https://track.customer.io/unsubscribe/dgTplQ0LAK22Bqy2BgGd6awJCFt-DuLdPyGL8YU= )

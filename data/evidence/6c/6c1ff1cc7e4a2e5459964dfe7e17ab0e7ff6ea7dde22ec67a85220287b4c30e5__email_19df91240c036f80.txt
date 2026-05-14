@@ -1,0 +1,75 @@
+Event-driven webhooks are now available in Gemini API
+⚡ Stop polling and get real-time push notifications instead ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏
+Email not displaying correctly? View it  
+online<https://notifications.google.com/g/vib/AOExmq2J9fbX5hlcRWLpMBOS8_emvoF2CUmqpmotX_4toARKCnJziO4XitNxTtRdrhQaR8RMHF1Yrue7IGm2V51XZTSz7XOPX3iXXmThA022DgYyG2im8Jp0FNBezNf_mNpGHQ8>
+Google AI  
+Studio<https://c.gle/AOExmq0QkqqUbnSz9fnfP9TRn-j94vg7TjhWxwHll8WRBNx2Xsg2tpwE3wekCuJJCjvEi3YGyhozHK0MVBsPBcgMmBetZAnE8ZrPPLpzcrP5VmGi-_QDDbACyWlv-dsSqLHbRwTu_hO6sw9hCo7E3bF2>
+Event-driven webhooks are are now in Gemini API
+Get started with  
+webhooks<https://c.gle/AOExmq0vif264Ahyc9rPdKngoqTnnmQXaqijOCxhikh75g6oNpCSPUO8nMJA9rfoLM4Nc09BxqsqLIfgO6K7Qc-8VDwPB_4dSTNlNyJmUbUXCOFPkyiBA-Q3XpNVJBIy5-W6En4TUyczhqnHgWkIQz9vmQqzn6CTpZxsij7X8CPZV0ZbzQKcILsc7wB1>
+Hi Gene,
+Tired of polling for job status? Gemini API now supports webhooks to  
+provide real-time HTTP POST notifications that hit your server the moment a  
+batch job completes, a video finishes generating, or an agent workflow  
+needs attention.
+Why webhooks
+- Real-time  
+alerts<https://c.gle/AOExmq2iFL-FiUUAc0Q1SEoQDBaHxQuQN5JIBqGK6DIbLpzEGVPSwBstGBx66745HnSPM1maz73G3_Fas14BqUs7sFJYGA_Azsj0fDSOzhXxhXrHJWuupGNXTOAY4ND3bhn1qI3BTairl2upM12-34trrVH7L_ex02BQ9eu4SXYZyjM>:  
+Get notified the moment your massive batch or long video generation task is  
+done.
+- Secure &  
+reliable<https://c.gle/AOExmq2NSvsmRSD9xrh9WjeyrAz5EsH0n3QsP2ozfu5_MDK0O8zCqeEfHvAnRghZvvuN2ElrqD21y6bP6hBl31_hS5MFfd-g8Y70c-tL0zeallK5tgJwhxNSxf0mdA6aZGaNzwtuF8EuM56jfpbGAm89e3-S-6TwfxZ4pBQy_hqnxdI>:  
+Built on the Standard Webhooks specification, featuring signed requests and  
+guaranteed "at-least-once" delivery with backoff.
+- Flexible  
+setup<https://c.gle/AOExmq3Ip8Bfl7ULXG7i4Jq_QDNFRpWzDGtssH2hO0EjUipvANvwCTpbQtyx54pIZYLzzmqjx2Rc6TplOYWF7PArjikbXozXQK1flNE-3_vyXlVOPrF9pxjTFOmiMpAOjwJKZCamYjO8r8v0DWvO4x5uvQKylvDik75qvC8ifNLP>:  
+Supports both static (project-level) and dynamic (per-request) webhook  
+registration.
+Get started in minutes
+All you need is an HTTPS endpoint that can receive POST requests and your  
+Gemini API  
+key<https://c.gle/AOExmq1sLrZcgJ1500oy3ozETNdGmM1SLo44Wc8r8CEH0xOy-tyvfy6eB7EDfKl_I7zNTbMFIZ1MBwlJ-KXbnY_L-aPqwvU43N40WkB4_HAu86mpvZwqPxiRNpfpRbMzXIax_lU32A7PXQAzeOkFGU3eIktKYou3>.  
+Here's a quick example of how you can dynamically configure a webhook for a  
+Gemini batch job using the Python SDK:
+from google import genai
+from google.genai import types
+client = genai.Client()
+webhook_config = types.WebhookConfig(
+uri="https://your-server.com/webhooks/gemini",
+subscribed_events=["video.generated"]
+)
+operation = client.models.generate_videos(
+model="veo-3.1-generate-preview",
+prompt="A stunning drone view of the Grand Canyon.",
+config={"webhook_config": webhook_config}
+print(f"Video generation job {operation.name} started! You'll be notified  
+at your webhook URI.")
+Documentation<https://c.gle/AOExmq3um5XZaXnfKWLKg0UVX0jcHhps2st5tmNMpcyHjipTQn9UngXwjWoQ0gitvZgh6FOqTcJkNVMwqp5nc30wgQfaPKt-Ez5OKbQyCjsxO9jd9ivj-_STGkKqoFYbJdpO70dgxEFztohg56j_Ok3Q8Yf8JnuZYIRP_sDnjKdW>
+Full event catalog and tips for how to secure your endpoints.
+Read the  
+docs<https://c.gle/AOExmq2sKHrNhoqUfFIcp8A8kGEW2Hin-E-B5HevPiLEn1POtvCgBefcXbJkvRbKpjE9iPDbJ1EqAOPi9R1Az_Dl9iRRmT6sT1OQ-FBgQk0gZholT6zZKBHRhHjybZHlLk55q2qcslwYVuMoAjYGRSwsciXpasWOvxKZaPJDOtUSa1Zp7w>
+Hands-on  
+practice<https://c.gle/AOExmq0M3a3115Chyz4pRr5DWK3PX3EaMPoo_SLH5sLezCnRnS7q4h-xwb6IKKk6MHicDzlBg9nqW27usao3lSSXGRud8oKDsjw8dNpLMO8pzBWyoTVTTsxh1CZu09O4PRrHT53P9uFM8zonJvieMncRnMPrmv2UyYaEUW8KW5f_6Bh0JzsFAPa9coE1JGgEkSe5nA-RhwFUJHUmuuMSeTaiUoc>
+A cookbook for building end-to-end webhook integrations.
+Get the  
+cookbooks<https://c.gle/AOExmq2htbd8m7rQVghUix20CdoXdcRuHKjjDlFDnJerRApWL_VMmtlNeeYIE5pEh2lqneMv2IU4nRitDY2m4Q8SCYly6TbDJtgawY1TiHA18Fp7Sf1erGYHsE7g0QfXZNI33oSBa5XJZJi3NKp2ZbnDLQ4r4LYALS6TNBLSZScOzxNopWfl8rnWv1RZk3LgZ3R5RPnkdxTZlp5K67yCJDKCZDdnGFU-XA>
+Happy building,
+The Google AI Studio team
+Prompt  
+models<https://c.gle/AOExmq2X6mzenRj5u6oC-Pg3dBudSkqg298X7-u4uiWmw8pLotatQVxY4ewZ-iDJm7NKB3c8YX74re16NSWPm2NlRm2_hcc0dj7YlOfNc1ghajhNAeB9TjiuBYBT3DdNSWXo-_IKcyRfoJVpcMRd4EJGtJlZZuaU42buh-Byh-5VvpcslvglHtM97Efg7gIY-DssJadm3tkTiJHcqown99rGJ4yZKUYUeA>
+Manage API  
+keys<https://c.gle/AOExmq0ZDX0l0UxerMoO58dwma2ccSdPUuJqiYUkytv-kt5ClWo5LgKHNGBO_rp05L04ryLKr_lrQZmXXAzYzbr1SQedxKbnUm3s4PymV2OLq6nY89l7KbdPnLJJE62vcu3se2GPlrXlcPzS3QCV5Mm7FDIdptUmBOm120vAf5zNWRLiswA83Q2pQuHP4vrmTaeEcs5U8AkoBqXlkYk>
+Vibe  
+code<https://c.gle/AOExmq2BFlaIj9QJbc0B9K_0a6dm2k_HbRiXjKt0r77oqeR0UFfp0cGZfKRy9JeayTsG-tGdRbs6EBysshHwIXY4c09BXWQtzb4pqxohingtoL-EFBfA_iRDCh3XLUdZOQs2p1gFdVuDum2eI1dmxUiftyJz2xG2Pp3qKtYI7uxtzHCnOfvUKEMu2iN1R9hVLFCutVU>
+X<https://c.gle/AOExmq0sddztcSRl0RqL2aPfZhm6HEIUAzoLeB7GJQDZJHacWNjON6W2_eD0xrkMKLnPo_gbXuxFVPq-4Mvuukxhw5Fbmum2GZkSzsJM5VYqfvynCqB-zFgbwo2HX0MRfpW4duY>
+Latest product  
+updates<https://c.gle/AOExmq3g-PRTq4L2geIqHEsAfx2qI0sCP8EWaOt40__51kWvkEqvfWv5xon-emwsy5QLA9E-1xE42mSR6CzXwJo6sBXASe2XjnPCCWQoZ5iI1_N5WU7J_7gd72f1tX4C7s69aTKfXZOIge-87gABsQTGgAW9P713>
+Upcoming global events  
+icon<https://c.gle/AOExmq3THnzoBUjnlG6v8luViZMCrEMunnZVhg4AYEV_FTgWB8BfXWNA203xP6nA1MyhnWVKEctY1m9WawQZN1ez-3dWKrY_agmtlaMX-YoI31JLjCxIgj0TQfOMbej00zIfepF7-qyUJF6mS9InEnptC2uuH8wKPg>
+Upcoming global  
+events<https://c.gle/AOExmq0if602g7cse9ErvWx1_kxnkRFxBcpxPhOodJXXZ3uM3G9vS-z4vD1hAnEAOeLlnFyWnARXLgkFiEOuI7Z_spuOajxeQL4LVm3sot6VJwHRKlGbBVPVSk_HR_f1mhkwvtecw_8EhNbpGlaDfKcvkZ8b>
+© 2026 Google LLC 1600 Amphitheatre Parkway, Mountain View, CA 94043, USA
+This email was sent to genefryaustin@gmail.com because you signed up to  
+receive emails about Google AI. If you do not wish to receive these emails,  
+please  
+unsubscribe<https://myaccount.google.com/communication-preferences/unsubscribe/gt/AOExmq1Bsj6jOcj1yn_qqgiBC9O-Gp8ZbXcilpVnxyyncwqawX3tuTmhSy-uxD-x2cgKCqUvjobwZ0pfKLbAF3ga4nlRMwLrcs6P51icQfJYkjUGeD-dcjU9aUVu6Ac9H9rr6hh2MeOKxXc1QdpkrJEpNlgQBQOx1EXcYxW2zqDOwT-VoyWsrpg8WR925bT-wCprUjfQt0lyswyTlWgvy_oBcFCLC613-1JJJGpT7Lrb4Pk0erEm?utm_source=gm&utm_medium=email&auto=true>.
