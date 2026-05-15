@@ -1,8 +1,8 @@
 # -----------------------------
 # Core App
 # -----------------------------
-streamlit==1.37.0
-pandas==2.2.2
+streamlit>=1.37.0
+pandas>=2.3.3        # First version with good Python 3.14 wheels
 numpy==1.26.4
 
 # -----------------------------
