@@ -81,7 +81,7 @@ pdfplumber
 beautifulsoup4
 
 pytesseract
-Pillow
+pillow>=11.0.0
 pdf2image
 
 # https://github.com/UB-Mannheim/tesseract/wiki
@@ -92,4 +92,6 @@ openpyxl
 
 networkx
 pyvis
+
+streamlit-agraph
 
