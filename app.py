@@ -3,27 +3,41 @@ import sys
 from pathlib import Path
 
 # =============================================
-# CRITICAL PATH FIX FOR STREAMLIT CLOUD
+# ROBUST PATH FIX FOR BOTH LOCAL + STREAMLIT CLOUD
 # =============================================
 ROOT_DIR = Path(__file__).parent.resolve()
 sys.path.insert(0, str(ROOT_DIR))
 
+# Extra safety for Streamlit Cloud's /mount/src/... structure
+POSSIBLE_ROOTS = [
+    ROOT_DIR,
+    ROOT_DIR.parent,           # in case it's inside /src/
+    ROOT_DIR.parent.parent,
+]
+
+for path in POSSIBLE_ROOTS:
+    if (path / "core").exists():
+        sys.path.insert(0, str(path))
+        break
+
 import streamlit as st
 
+st.info(f"🔍 Working directory: {Path.cwd()}")
+st.info(f"🔍 Python path root: {ROOT_DIR}")
+
 # =============================================
-# SAFE IMPORTS (avoid circular import crash)
+# IMPORTS
 # =============================================
 try:
     from core.runtime.runtime_bootstrap import bootstrap_runtime
     from core.runtime.sovereign_runtime_bootstrap import (
         define_sovereign_runtime_services,
         bootstrap_sovereign_runtime,
-        build_sovereign_runtime_fabric,   # optional but useful
     )
+    st.success("✅ All core imports successful!")
 
-except ImportError as e:
+except Exception as e:
     st.error(f"🚨 Import Error: {e}")
-    st.info("Try restarting the app or check the file paths.")
     st.stop()
 
 # Optional: Import other things you need
