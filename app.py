@@ -2,18 +2,28 @@
 import sys
 from pathlib import Path
 
-# === CRITICAL: Add project root to Python path ===
+# =============================================
+# CRITICAL PATH FIX FOR STREAMLIT CLOUD
+# =============================================
 ROOT_DIR = Path(__file__).parent.resolve()
 sys.path.insert(0, str(ROOT_DIR))
 
 import streamlit as st
 
-# === FIXED & SAFER IMPORTS (avoid circular import issues) ===
+# =============================================
+# SAFE IMPORTS (avoid circular import crash)
+# =============================================
 try:
     from core.runtime.runtime_bootstrap import bootstrap_runtime
-    from core.runtime.sovereign_runtime_bootstrap import build_sovereign_live_runtime_state_engine
+    from core.runtime.sovereign_runtime_bootstrap import (
+        define_sovereign_runtime_services,
+        bootstrap_sovereign_runtime,
+        build_sovereign_runtime_fabric,   # optional but useful
+    )
+
 except ImportError as e:
-    st.error(f"Import Error: {e}")
+    st.error(f"🚨 Import Error: {e}")
+    st.info("Try restarting the app or check the file paths.")
     st.stop()
 
 # Optional: Import other things you need
