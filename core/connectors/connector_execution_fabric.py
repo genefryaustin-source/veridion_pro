@@ -1,683 +1,932 @@
 """
 core/connectors/connector_execution_fabric.py
 
-Connector Execution Fabric.
+Governed Connector Execution Fabric
 
-This is the execution mesh between:
-- connector registry
-- connector health monitor
-- action router
-- distributed queue
-- failover execution
+This fabric receives governed execution packages from:
+
+    sovereign_execution_router.py
+        ↓
+    connector_execution_fabric.py
+        ↓
+    registered connectors
 
 Responsibilities:
 - connector selection
-- failover chains
-- degraded-mode rerouting
-- retry orchestration
-- outage-aware routing
-- tenant-aware routing
-- execution telemetry
-- connector cooldown windows
-- weighted routing
-- latency-aware selection
+- health-aware routing
+- failover-aware execution
+- governance-aware retry control
+- verification-aware completion
+- lineage/evidence hooks
+- degraded-mode execution constraints
 
-Design:
-- Works with BaseConnector-compatible connectors
-- Uses connector_registry when available
-- Uses connector_health_monitor when available
-- Can fall back to direct connector dict if needed
+IMPORTANT:
+This fabric may call connector objects, but it does NOT bypass governance.
+It expects execution requests to arrive already packaged by the sovereign
+execution router.
 """
 
 from __future__ import annotations
 
 import time
 import uuid
-import traceback
-from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Tuple
+from dataclasses import asdict, dataclass, field
+from enum import Enum
+from typing import Any, Dict, List, Optional, Sequence
 
 
-try:
-    from core.connectors.base_connector import (
-        ConnectorActionResult,
-        STATUS_SUCCESS,
-        STATUS_FAILED,
-        STATUS_BLOCKED,
-        STATUS_SKIPPED,
-    )
-except Exception:
-    ConnectorActionResult = None
-    STATUS_SUCCESS = "SUCCESS"
-    STATUS_FAILED = "FAILED"
-    STATUS_BLOCKED = "BLOCKED"
-    STATUS_SKIPPED = "SKIPPED"
+# ============================================================
+# CONSTANTS
+# ============================================================
+
+DEFAULT_FABRIC_NAME = "connector_execution_fabric"
+
+EXECUTION_STATUS_ACCEPTED = "ACCEPTED"
+EXECUTION_STATUS_BLOCKED = "BLOCKED"
+EXECUTION_STATUS_DEFERRED = "DEFERRED"
+EXECUTION_STATUS_EXECUTED = "EXECUTED"
+EXECUTION_STATUS_FAILED = "FAILED"
+EXECUTION_STATUS_FAILOVER_USED = "FAILOVER_USED"
+EXECUTION_STATUS_VERIFICATION_REQUIRED = "VERIFICATION_REQUIRED"
+EXECUTION_STATUS_VERIFICATION_FAILED = "VERIFICATION_FAILED"
+EXECUTION_STATUS_VERIFIED = "VERIFIED"
+
+CONNECTOR_HEALTH_HEALTHY = "HEALTHY"
+CONNECTOR_HEALTH_DEGRADED = "DEGRADED"
+CONNECTOR_HEALTH_UNAVAILABLE = "UNAVAILABLE"
+CONNECTOR_HEALTH_UNKNOWN = "UNKNOWN"
+
+RISK_LOW = "LOW"
+RISK_MEDIUM = "MEDIUM"
+RISK_HIGH = "HIGH"
+RISK_CRITICAL = "CRITICAL"
 
 
-try:
-    from core.connectors.connector_registry import get_connector_registry
-except Exception:
-    get_connector_registry = None
+class ConnectorExecutionAction(str, Enum):
+    OBSERVE = "OBSERVE"
+    INVESTIGATE = "INVESTIGATE"
+    ENRICH = "ENRICH"
+    ESCALATE = "ESCALATE"
+    NOTIFY = "NOTIFY"
+    CONTAIN = "CONTAIN"
+    ISOLATE_ENDPOINT = "ISOLATE_ENDPOINT"
+    REVOKE_SESSION = "REVOKE_SESSION"
+    DISABLE_USER = "DISABLE_USER"
+    QUARANTINE_EMAIL = "QUARANTINE_EMAIL"
+    DELETE_EMAIL = "DELETE_EMAIL"
+    PURGE_MAILBOX = "PURGE_MAILBOX"
+    BLOCK_NETWORK_TRAFFIC = "BLOCK_NETWORK_TRAFFIC"
+    UPDATE_POLICY = "UPDATE_POLICY"
+    ROLLBACK = "ROLLBACK"
+    UNKNOWN = "UNKNOWN"
 
 
-try:
-    from core.connectors.connector_health_monitor import (
-        get_connector_health_monitor,
-        HEALTH_HEALTHY,
-        HEALTH_DEGRADED,
-        HEALTH_OUTAGE,
-    )
-except Exception:
-    get_connector_health_monitor = None
-    HEALTH_HEALTHY = "HEALTHY"
-    HEALTH_DEGRADED = "DEGRADED"
-    HEALTH_OUTAGE = "OUTAGE"
+class ConnectorTarget(str, Enum):
+    MICROSOFT_GRAPH = "MICROSOFT_GRAPH"
+    GOOGLE_WORKSPACE = "GOOGLE_WORKSPACE"
+    CROWDSTRIKE = "CROWDSTRIKE"
+    SENTINELONE = "SENTINELONE"
+    AWS = "AWS"
+    LOCAL_AGENT = "LOCAL_AGENT"
+    GENERIC_CONNECTOR = "GENERIC_CONNECTOR"
+    NONE = "NONE"
 
 
-try:
-    from core.events.event_subscribers import dispatch_event
-except Exception:
-    def dispatch_event(*args, **kwargs):
-        return None
-
-
-FABRIC_STATUS_SUCCESS = "SUCCESS"
-FABRIC_STATUS_FAILED = "FAILED"
-FABRIC_STATUS_BLOCKED = "BLOCKED"
-FABRIC_STATUS_SKIPPED = "SKIPPED"
-FABRIC_STATUS_NO_ROUTE = "NO_ROUTE"
-FABRIC_STATUS_ALL_FAILED = "ALL_FAILED"
-
-
-@dataclass
-class ConnectorExecutionAttempt:
+@dataclass(frozen=True)
+class ConnectorHealthState:
     connector_name: str
-    action: str
-    target: Optional[str] = None
-    success: bool = False
-    status: str = STATUS_FAILED
-    latency_ms: float = 0.0
-    error: Optional[str] = None
-    message: str = ""
-    raw_response: Dict[str, Any] = field(default_factory=dict)
+    health: str
+    failure_count: int = 0
+    success_count: int = 0
+    last_latency_ms: Optional[int] = None
+    last_error: Optional[str] = None
+    last_updated_ms: int = field(default_factory=lambda: int(time.time() * 1000))
 
 
-@dataclass
-class ConnectorFabricResult:
-    success: bool
+@dataclass(frozen=True)
+class ConnectorExecutionResult:
+    result_id: str
+    execution_package_id: Optional[str]
     status: str
-    action: str
-    target: Optional[str] = None
-    selected_connector: Optional[str] = None
-    connector_action: Optional[str] = None
-    fabric_execution_id: str = field(default_factory=lambda: str(uuid.uuid4()))
-    timestamp_ms: int = field(default_factory=lambda: int(time.time() * 1000))
+    action_type: str
+    selected_connector: str
+    attempted_connectors: List[str]
+    failover_used: bool
+    verification_required: bool
+    verification_succeeded: Optional[bool]
+    rollback_recommended: bool
+    rationale: str
+    connector_response: Dict[str, Any]
+    tenant_id: Optional[str] = None
+    case_id: Optional[str] = None
+    correlation_id: Optional[str] = None
+    created_at_ms: int = field(default_factory=lambda: int(time.time() * 1000))
 
-    attempts: List[ConnectorExecutionAttempt] = field(default_factory=list)
 
-    connector_result: Optional[Any] = None
-
-    rollback_supported: bool = False
-    rollback_connector: Optional[str] = None
-    rollback_action: Optional[str] = None
-    rollback_data: Dict[str, Any] = field(default_factory=dict)
-
-    message: str = ""
-    error: Optional[str] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+@dataclass(frozen=True)
+class ConnectorExecutionFabricSnapshot:
+    fabric_name: str
+    total_packages_seen: int
+    total_results_created: int
+    registered_connectors: List[str]
+    last_result_id: Optional[str]
+    last_status: Optional[str]
+    last_selected_connector: Optional[str]
+    last_updated_ms: int
 
 
 class ConnectorExecutionFabric:
     """
-    Connector execution mesh.
+    Governance-aware connector execution mesh.
 
-    Preferred invocation:
-        fabric.execute(
-            capability="contain_host",
-            action="contain_host",
-            target=aid,
-            payload=context,
-            tenant_id="default",
-            allow_destructive=False,
-        )
+    Connectors may expose any of:
+    - execute(package)
+    - execute(package, context={...})
+    - submit(package)
+    - route(package)
+    - verify(result/package)
     """
 
     def __init__(
         self,
+        *,
+        fabric_name: str = DEFAULT_FABRIC_NAME,
         connectors: Optional[Dict[str, Any]] = None,
-        config: Optional[Dict[str, Any]] = None,
-    ):
-        self.connectors = connectors or {}
-        self.config = config or {}
-
-        self.registry = get_connector_registry() if get_connector_registry else None
-        self.health_monitor = get_connector_health_monitor() if get_connector_health_monitor else None
-
-        self.cooldowns: Dict[str, int] = {}
-
-        fabric_cfg = self.config.get("connector_fabric", {})
-
-        self.max_attempts = int(fabric_cfg.get("max_attempts", 3))
-        self.retry_delay_ms = int(fabric_cfg.get("retry_delay_ms", 250))
-        self.cooldown_ms = int(fabric_cfg.get("cooldown_ms", 60_000))
-        self.allow_degraded = bool(fabric_cfg.get("allow_degraded", True))
-        self.prefer_low_latency = bool(fabric_cfg.get("prefer_low_latency", True))
-
-    # ========================================================
-    # TELEMETRY
-    # ========================================================
-
-    def emit_event(
-        self,
-        event_type: str,
-        payload: Optional[Dict[str, Any]] = None,
+        event_bus: Optional[Any] = None,
+        operational_memory_engine: Optional[Any] = None,
+        lineage_engine: Optional[Any] = None,
+        fedramp_evidence_lineage_engine: Optional[Any] = None,
+        max_retry_attempts: int = 1,
+        allow_failover: bool = True,
     ) -> None:
-        dispatch_event(
-            event_type=event_type,
-            payload=payload or {},
-            source="connector_execution_fabric",
+        self.fabric_name = fabric_name
+        self.connectors: Dict[str, Any] = {
+            self._safe_connector_name(k): v
+            for k, v in dict(connectors or {}).items()
+        }
+
+        self.event_bus = event_bus
+        self.operational_memory_engine = operational_memory_engine
+        self.lineage_engine = lineage_engine
+        self.fedramp_evidence_lineage_engine = fedramp_evidence_lineage_engine
+
+        self.max_retry_attempts = max(0, int(max_retry_attempts))
+        self.allow_failover = allow_failover
+
+        self._packages_seen = 0
+        self._results: List[ConnectorExecutionResult] = []
+        self._health: Dict[str, ConnectorHealthState] = {
+            name: ConnectorHealthState(
+                connector_name=name,
+                health=CONNECTOR_HEALTH_UNKNOWN,
+            )
+            for name in self.connectors
+        }
+
+    # --------------------------------------------------------
+    # CONNECTOR REGISTRATION
+    # --------------------------------------------------------
+
+    def register_connector(self, name: str, connector: Any) -> None:
+        safe_name = self._safe_connector_name(name)
+        self.connectors[safe_name] = connector
+        self._health.setdefault(
+            safe_name,
+            ConnectorHealthState(
+                connector_name=safe_name,
+                health=CONNECTOR_HEALTH_UNKNOWN,
+            ),
         )
 
-    # ========================================================
-    # PUBLIC EXECUTION
-    # ========================================================
+    def unregister_connector(self, name: str) -> None:
+        safe_name = self._safe_connector_name(name)
+        self.connectors.pop(safe_name, None)
+
+    # --------------------------------------------------------
+    # PUBLIC EXECUTION API
+    # --------------------------------------------------------
+
+    def submit(
+        self,
+        package: Any,
+        *,
+        context: Optional[Dict[str, Any]] = None,
+    ) -> ConnectorExecutionResult:
+        return self.execute(package, context=context)
+
+    def route(
+        self,
+        package: Any,
+        *,
+        context: Optional[Dict[str, Any]] = None,
+    ) -> ConnectorExecutionResult:
+        return self.execute(package, context=context)
 
     def execute(
         self,
-        capability: str,
-        action: str,
-        target: Optional[str] = None,
-        payload: Optional[Dict[str, Any]] = None,
-        tenant_id: Optional[str] = None,
-        preferred_connector: Optional[str] = None,
-        connector_order: Optional[List[str]] = None,
-        allow_destructive: bool = False,
-        max_attempts: Optional[int] = None,
-    ) -> ConnectorFabricResult:
-        payload = payload or {}
-        tenant_id = tenant_id or payload.get("tenant_id") or "default"
-        execution_id = str(uuid.uuid4())
-        max_attempts = max_attempts or self.max_attempts
+        package: Any,
+        *,
+        context: Optional[Dict[str, Any]] = None,
+    ) -> ConnectorExecutionResult:
+        """
+        Execute governed package through selected connector.
 
-        self.emit_event(
-            "CONNECTOR_FABRIC_EXECUTION_STARTED",
-            {
-                "fabric_execution_id": execution_id,
-                "capability": capability,
-                "action": action,
-                "target": target,
-                "tenant_id": tenant_id,
-                "preferred_connector": preferred_connector,
-            },
-        )
+        Execution is blocked if the package is not safe to run.
+        """
 
-        route = self.resolve_route(
-            capability=capability,
-            tenant_id=tenant_id,
-            preferred_connector=preferred_connector,
-            connector_order=connector_order,
-        )
+        self._packages_seen += 1
 
-        if not route:
-            result = ConnectorFabricResult(
-                success=False,
-                status=FABRIC_STATUS_NO_ROUTE,
-                action=action,
-                target=target,
-                connector_action=action,
-                fabric_execution_id=execution_id,
-                error="no_connector_route",
-                message=f"No connector route available for capability: {capability}",
-                metadata={
-                    "capability": capability,
-                    "tenant_id": tenant_id,
-                },
-            )
+        pkg = self._package_to_dict(package)
+        safety_status = self._preflight_status(pkg)
 
-            self.emit_event(
-                "CONNECTOR_FABRIC_NO_ROUTE",
-                result.__dict__,
-            )
-
+        if safety_status != EXECUTION_STATUS_ACCEPTED:
+            result = self._blocked_or_deferred_result(pkg, safety_status)
+            self._record_result(result, context=context)
             return result
 
-        attempts: List[ConnectorExecutionAttempt] = []
-        last_connector_result = None
+        action_type = self._safe_action_type(pkg.get("action_type"))
+        selected_connector = self._safe_connector_name(
+            pkg.get("selected_connector")
+        )
 
-        for connector_name in route[:max_attempts]:
-            connector = self.get_connector(connector_name)
+        candidates = self._candidate_connectors(pkg, selected_connector)
+        attempted: List[str] = []
+        last_response: Dict[str, Any] = {}
+        last_error: Optional[str] = None
+        failover_used = False
 
+        for idx, connector_name in enumerate(candidates):
+            connector = self.connectors.get(connector_name)
             if connector is None:
-                attempts.append(
-                    ConnectorExecutionAttempt(
-                        connector_name=connector_name,
-                        action=action,
-                        target=target,
-                        success=False,
-                        status=STATUS_FAILED,
-                        error="connector_unavailable",
-                        message="Connector unavailable or quarantined.",
-                    )
-                )
+                attempted.append(connector_name)
+                last_error = f"Connector not registered: {connector_name}"
+                self._mark_failure(connector_name, last_error)
                 continue
 
-            if self.is_in_cooldown(connector_name):
-                attempts.append(
-                    ConnectorExecutionAttempt(
-                        connector_name=connector_name,
-                        action=action,
-                        target=target,
-                        success=False,
-                        status=STATUS_SKIPPED,
-                        error="connector_in_cooldown",
-                        message="Connector skipped due to cooldown.",
-                    )
-                )
+            if not self._connector_is_usable(connector_name, pkg):
+                attempted.append(connector_name)
+                last_error = f"Connector not usable: {connector_name}"
                 continue
 
-            if not self.is_connector_eligible(connector_name):
-                attempts.append(
-                    ConnectorExecutionAttempt(
-                        connector_name=connector_name,
-                        action=action,
-                        target=target,
-                        success=False,
-                        status=STATUS_SKIPPED,
-                        error="connector_not_eligible",
-                        message="Connector skipped due to health state.",
+            if idx > 0:
+                failover_used = True
+
+            for attempt in range(self._allowed_attempts(action_type)):
+                attempted.append(connector_name)
+                started = time.time()
+
+                try:
+                    response = self._invoke_connector(
+                        connector,
+                        package,
+                        context=context or {},
                     )
-                )
-                continue
+                    latency_ms = int((time.time() - started) * 1000)
 
-            started = time.perf_counter()
+                    last_response = self._normalize_connector_response(
+                        response
+                    )
+                    self._mark_success(connector_name, latency_ms)
 
-            try:
-                connector_result = connector.execute(
-                    action=action,
-                    target=target,
-                    payload=payload,
-                    allow_destructive=allow_destructive,
-                )
+                    verification_required = bool(
+                        pkg.get("verification_metadata", {}).get(
+                            "verification_required",
+                            True,
+                        )
+                    )
 
-                latency_ms = round((time.perf_counter() - started) * 1000, 2)
-                last_connector_result = connector_result
+                    verification_succeeded = None
+                    status = EXECUTION_STATUS_EXECUTED
 
-                attempt = ConnectorExecutionAttempt(
-                    connector_name=connector_name,
-                    action=action,
-                    target=target,
-                    success=bool(getattr(connector_result, "success", False)),
-                    status=str(getattr(connector_result, "status", STATUS_FAILED)),
-                    latency_ms=latency_ms,
-                    error=getattr(connector_result, "error", None),
-                    message=getattr(connector_result, "message", ""),
-                    raw_response=getattr(connector_result, "raw_response", {}) or {},
-                )
+                    if verification_required:
+                        verification_succeeded = self._verify_execution(
+                            connector,
+                            package,
+                            last_response,
+                            context=context or {},
+                        )
+                        status = (
+                            EXECUTION_STATUS_VERIFIED
+                            if verification_succeeded
+                            else EXECUTION_STATUS_VERIFICATION_FAILED
+                        )
 
-                attempts.append(attempt)
-
-                if attempt.success:
-                    self.record_success(connector_name, latency_ms)
-
-                    result = ConnectorFabricResult(
-                        success=True,
-                        status=getattr(connector_result, "status", STATUS_SUCCESS),
-                        action=action,
-                        target=target,
+                    result = ConnectorExecutionResult(
+                        result_id=str(uuid.uuid4()),
+                        execution_package_id=pkg.get(
+                            "execution_package_id"
+                        ),
+                        status=(
+                            EXECUTION_STATUS_FAILOVER_USED
+                            if failover_used and status == EXECUTION_STATUS_EXECUTED
+                            else status
+                        ),
+                        action_type=action_type,
                         selected_connector=connector_name,
-                        connector_action=action,
-                        fabric_execution_id=execution_id,
-                        attempts=attempts,
-                        connector_result=connector_result,
-                        rollback_supported=bool(getattr(connector_result, "rollback_supported", False)),
-                        rollback_connector=connector_name if getattr(connector_result, "rollback_supported", False) else None,
-                        rollback_action=getattr(connector_result, "rollback_action", None),
-                        rollback_data=getattr(connector_result, "rollback_data", {}) or {},
-                        message=getattr(connector_result, "message", ""),
-                        error=getattr(connector_result, "error", None),
-                        metadata={
-                            "capability": capability,
-                            "tenant_id": tenant_id,
-                            "route": route,
-                        },
+                        attempted_connectors=list(attempted),
+                        failover_used=failover_used,
+                        verification_required=verification_required,
+                        verification_succeeded=verification_succeeded,
+                        rollback_recommended=(
+                            verification_succeeded is False
+                            or status == EXECUTION_STATUS_VERIFICATION_FAILED
+                        ),
+                        rationale=self._result_rationale(
+                            pkg,
+                            connector_name,
+                            status,
+                            failover_used,
+                        ),
+                        connector_response=last_response,
+                        tenant_id=pkg.get("tenant_id"),
+                        case_id=pkg.get("case_id"),
+                        correlation_id=pkg.get("correlation_id"),
                     )
 
-                    self.emit_event(
-                        "CONNECTOR_FABRIC_EXECUTION_COMPLETED",
-                        self._result_payload(result),
-                    )
-
+                    self._record_result(result, context=context)
                     return result
 
-                self.record_failure(
-                    connector_name=connector_name,
-                    error=attempt.error or attempt.message,
+                except Exception as exc:
+                    last_error = str(exc)
+                    self._mark_failure(connector_name, last_error)
+
+                    if not self._retry_allowed(action_type, attempt):
+                        break
+
+        result = ConnectorExecutionResult(
+            result_id=str(uuid.uuid4()),
+            execution_package_id=pkg.get("execution_package_id"),
+            status=EXECUTION_STATUS_FAILED,
+            action_type=action_type,
+            selected_connector=selected_connector,
+            attempted_connectors=list(attempted),
+            failover_used=failover_used,
+            verification_required=bool(
+                pkg.get("verification_metadata", {}).get(
+                    "verification_required",
+                    True,
                 )
-
-                self.emit_event(
-                    "CONNECTOR_FABRIC_ATTEMPT_FAILED",
-                    attempt.__dict__,
-                )
-
-                if self.should_cooldown(attempt):
-                    self.apply_cooldown(
-                        connector_name,
-                        reason=attempt.error or attempt.message,
-                    )
-
-                self._sleep_retry_delay()
-
-            except Exception:
-                latency_ms = round((time.perf_counter() - started) * 1000, 2)
-                error = traceback.format_exc()
-
-                attempt = ConnectorExecutionAttempt(
-                    connector_name=connector_name,
-                    action=action,
-                    target=target,
-                    success=False,
-                    status=STATUS_FAILED,
-                    latency_ms=latency_ms,
-                    error=error,
-                    message="Connector execution raised an exception.",
-                )
-
-                attempts.append(attempt)
-
-                self.record_failure(
-                    connector_name=connector_name,
-                    error=error,
-                )
-
-                self.emit_event(
-                    "CONNECTOR_FABRIC_ATTEMPT_EXCEPTION",
-                    attempt.__dict__,
-                )
-
-                self.apply_cooldown(connector_name, reason=error)
-                self._sleep_retry_delay()
-
-        result = ConnectorFabricResult(
-            success=False,
-            status=FABRIC_STATUS_ALL_FAILED,
-            action=action,
-            target=target,
-            connector_action=action,
-            fabric_execution_id=execution_id,
-            attempts=attempts,
-            connector_result=last_connector_result,
-            message="All connector execution attempts failed.",
-            error=self._last_error(attempts),
-            metadata={
-                "capability": capability,
-                "tenant_id": tenant_id,
-                "route": route,
-            },
+            ),
+            verification_succeeded=False,
+            rollback_recommended=True,
+            rationale=(
+                "Connector execution failed after governed routing. "
+                f"Last error: {last_error or 'unknown'}"
+            ),
+            connector_response=last_response,
+            tenant_id=pkg.get("tenant_id"),
+            case_id=pkg.get("case_id"),
+            correlation_id=pkg.get("correlation_id"),
         )
 
-        self.emit_event(
-            "CONNECTOR_FABRIC_EXECUTION_FAILED",
-            self._result_payload(result),
-        )
-
+        self._record_result(result, context=context)
         return result
 
-    # ========================================================
-    # ROUTING
-    # ========================================================
+    # --------------------------------------------------------
+    # PREFLIGHT / ROUTING
+    # --------------------------------------------------------
 
-    def resolve_route(
+    def _preflight_status(self, pkg: Dict[str, Any]) -> str:
+        route_status = str(pkg.get("route_status") or "").upper()
+        selected_route = str(pkg.get("selected_route") or "").upper()
+
+        if route_status in {
+            "BLOCKED",
+            "REQUIRES_APPROVAL",
+            "REQUIRES_GOVERNANCE",
+            "REQUIRES_ROLLBACK_PLAN",
+            "REQUIRES_CONTINUITY_REVIEW",
+            "DEFERRED",
+        }:
+            return route_status
+
+        if selected_route != "CONNECTOR_FABRIC":
+            return EXECUTION_STATUS_DEFERRED
+
+        safety = dict(pkg.get("safety_metadata") or {})
+        rollback = dict(pkg.get("rollback_metadata") or {})
+
+        if safety.get("blocked"):
+            return EXECUTION_STATUS_BLOCKED
+
+        if not safety.get("allowed", True):
+            return EXECUTION_STATUS_DEFERRED
+
+        if rollback.get("rollback_required") and not rollback.get(
+            "rollback_available"
+        ):
+            return "REQUIRES_ROLLBACK_PLAN"
+
+        return EXECUTION_STATUS_ACCEPTED
+
+    def _candidate_connectors(
         self,
-        capability: str,
-        tenant_id: Optional[str] = None,
-        preferred_connector: Optional[str] = None,
-        connector_order: Optional[List[str]] = None,
+        pkg: Dict[str, Any],
+        selected_connector: str,
     ) -> List[str]:
-        if connector_order:
-            return self.rank_route(connector_order)
+        candidates: List[str] = []
 
-        route: List[str] = []
+        if selected_connector and selected_connector != ConnectorTarget.NONE.value:
+            candidates.append(selected_connector)
 
-        if preferred_connector:
-            route.append(preferred_connector)
+        fallback = [
+            self._safe_connector_name(item)
+            for item in list(pkg.get("fallback_connectors", []) or [])
+        ]
 
-        if self.registry:
-            try:
-                route.extend(
-                    self.registry.get_failover_chain(
-                        capability=capability,
-                        tenant_id=tenant_id,
-                    )
-                )
-            except Exception:
-                pass
+        if self.allow_failover and pkg.get("safety_metadata", {}).get(
+            "failover_allowed",
+            True,
+        ):
+            candidates.extend(fallback)
 
-        if not route:
-            route.extend(self.find_local_capability_route(capability))
+        if not candidates:
+            candidates.append(ConnectorTarget.GENERIC_CONNECTOR.value)
 
-        deduped = []
-        seen = set()
+        return list(dict.fromkeys(candidates))
 
-        for name in route:
-            if not name or name in seen:
-                continue
-            seen.add(name)
-            deduped.append(name)
+    def _connector_is_usable(
+        self,
+        connector_name: str,
+        pkg: Dict[str, Any],
+    ) -> bool:
+        health = self._health.get(connector_name)
 
-        return self.rank_route(deduped)
-
-    def find_local_capability_route(self, capability: str) -> List[str]:
-        matches = []
-
-        for name, connector in self.connectors.items():
-            supported = getattr(connector, "SUPPORTED_ACTIONS", []) or []
-
-            if capability in supported:
-                matches.append(name)
-
-        return matches
-
-    def rank_route(self, route: List[str]) -> List[str]:
-        def score(name: str) -> Tuple[int, float, int]:
-            health_rank = 0
-            latency = 0.0
-            cooldown_rank = 0
-
-            if self.health_monitor:
-                state = self.health_monitor.get_state(name)
-
-                if state.health == HEALTH_HEALTHY:
-                    health_rank = 0
-                elif state.health == HEALTH_DEGRADED:
-                    health_rank = 1
-                elif state.health == HEALTH_OUTAGE:
-                    health_rank = 9
-                else:
-                    health_rank = 5
-
-                latency = float(getattr(state, "avg_latency_ms", 0.0) or 0.0)
-
-            if self.is_in_cooldown(name):
-                cooldown_rank = 10
-
-            return (cooldown_rank, health_rank, latency if self.prefer_low_latency else 0)
-
-        return sorted(route, key=score)
-
-    # ========================================================
-    # CONNECTOR LOOKUP
-    # ========================================================
-
-    def get_connector(self, connector_name: str) -> Optional[Any]:
-        if self.registry:
-            try:
-                connector = self.registry.get(connector_name)
-                if connector is not None:
-                    return connector
-            except Exception:
-                pass
-
-        return self.connectors.get(connector_name)
-
-    # ========================================================
-    # HEALTH / COOLDOWN
-    # ========================================================
-
-    def is_connector_eligible(self, connector_name: str) -> bool:
-        if not self.health_monitor:
+        if health is None:
             return True
 
-        state = self.health_monitor.get_state(connector_name)
-
-        if state.health == HEALTH_OUTAGE:
+        if health.health == CONNECTOR_HEALTH_UNAVAILABLE:
             return False
 
-        if state.health == HEALTH_DEGRADED and not self.allow_degraded:
+        blast_radius = str(pkg.get("blast_radius") or "").upper()
+        degraded_mode = bool(pkg.get("safety_metadata", {}).get("degraded_mode"))
+
+        if degraded_mode and blast_radius in {RISK_HIGH, RISK_CRITICAL}:
             return False
 
         return True
 
-    def record_success(self, connector_name: str, latency_ms: float) -> None:
-        if self.health_monitor:
-            self.health_monitor.record_success(connector_name, latency_ms)
+    # --------------------------------------------------------
+    # CONNECTOR INVOCATION
+    # --------------------------------------------------------
 
-        self.emit_event(
-            "CONNECTOR_FABRIC_HEALTH_SUCCESS",
-            {
-                "connector": connector_name,
-                "latency_ms": latency_ms,
-            },
-        )
+    def _invoke_connector(
+        self,
+        connector: Any,
+        package: Any,
+        *,
+        context: Dict[str, Any],
+    ) -> Any:
+        if hasattr(connector, "execute"):
+            try:
+                return connector.execute(package, context=context)
+            except TypeError:
+                return connector.execute(package)
 
-    def record_failure(self, connector_name: str, error: Optional[str] = None) -> None:
-        auth_failure = self._looks_like_auth_failure(error or "")
+        if hasattr(connector, "submit"):
+            try:
+                return connector.submit(package, context=context)
+            except TypeError:
+                return connector.submit(package)
 
-        if self.health_monitor:
-            self.health_monitor.record_failure(
-                connector_name=connector_name,
-                error=error or "",
-                auth_failure=auth_failure,
-            )
+        if hasattr(connector, "route"):
+            try:
+                return connector.route(package, context=context)
+            except TypeError:
+                return connector.route(package)
 
-        self.emit_event(
-            "CONNECTOR_FABRIC_HEALTH_FAILURE",
-            {
-                "connector": connector_name,
-                "error": error,
-                "auth_failure": auth_failure,
-            },
-        )
+        if callable(connector):
+            return connector(package)
 
-    def should_cooldown(self, attempt: ConnectorExecutionAttempt) -> bool:
-        if not attempt.error:
+        raise RuntimeError("Connector does not expose execute/submit/route.")
+
+    def _verify_execution(
+        self,
+        connector: Any,
+        package: Any,
+        connector_response: Dict[str, Any],
+        *,
+        context: Dict[str, Any],
+    ) -> bool:
+        if connector_response.get("verified") is True:
+            return True
+
+        if connector_response.get("verification_succeeded") is True:
+            return True
+
+        if hasattr(connector, "verify"):
+            try:
+                verification = connector.verify(
+                    package,
+                    connector_response,
+                    context=context,
+                )
+            except TypeError:
+                verification = connector.verify(package, connector_response)
+
+            if isinstance(verification, bool):
+                return verification
+
+            if isinstance(verification, dict):
+                return bool(
+                    verification.get("verified")
+                    or verification.get("verification_succeeded")
+                )
+
+        return bool(connector_response.get("success", False))
+
+    # --------------------------------------------------------
+    # RETRY POLICY
+    # --------------------------------------------------------
+
+    def _allowed_attempts(self, action_type: str) -> int:
+        if action_type in {
+            ConnectorExecutionAction.PURGE_MAILBOX.value,
+            ConnectorExecutionAction.DELETE_EMAIL.value,
+            ConnectorExecutionAction.DISABLE_USER.value,
+            ConnectorExecutionAction.UPDATE_POLICY.value,
+        }:
+            return 1
+
+        return 1 + self.max_retry_attempts
+
+    def _retry_allowed(self, action_type: str, attempt_index: int) -> bool:
+        if attempt_index >= self.max_retry_attempts:
             return False
 
-        error = attempt.error.lower()
-
-        return any(
-            token in error
-            for token in [
-                "timeout",
-                "rate limit",
-                "429",
-                "503",
-                "temporarily unavailable",
-                "connection",
-                "auth",
-                "unauthorized",
-                "forbidden",
-            ]
-        )
-
-    def apply_cooldown(self, connector_name: str, reason: str = "") -> None:
-        until = int(time.time() * 1000) + self.cooldown_ms
-        self.cooldowns[connector_name] = until
-
-        self.emit_event(
-            "CONNECTOR_FABRIC_COOLDOWN_APPLIED",
-            {
-                "connector": connector_name,
-                "cooldown_until_ms": until,
-                "reason": reason,
-            },
-        )
-
-    def is_in_cooldown(self, connector_name: str) -> bool:
-        until = self.cooldowns.get(connector_name)
-        if not until:
+        if action_type in {
+            ConnectorExecutionAction.PURGE_MAILBOX.value,
+            ConnectorExecutionAction.DELETE_EMAIL.value,
+            ConnectorExecutionAction.DISABLE_USER.value,
+            ConnectorExecutionAction.UPDATE_POLICY.value,
+        }:
             return False
 
-        return int(time.time() * 1000) < until
+        return True
 
-    # ========================================================
-    # HELPERS
-    # ========================================================
+    # --------------------------------------------------------
+    # HEALTH
+    # --------------------------------------------------------
 
-    def _sleep_retry_delay(self) -> None:
-        if self.retry_delay_ms <= 0:
+    def _mark_success(self, connector_name: str, latency_ms: int) -> None:
+        old = self._health.get(connector_name)
+        self._health[connector_name] = ConnectorHealthState(
+            connector_name=connector_name,
+            health=CONNECTOR_HEALTH_HEALTHY,
+            failure_count=old.failure_count if old else 0,
+            success_count=(old.success_count if old else 0) + 1,
+            last_latency_ms=latency_ms,
+            last_error=None,
+        )
+
+    def _mark_failure(self, connector_name: str, error: str) -> None:
+        old = self._health.get(connector_name)
+        failure_count = (old.failure_count if old else 0) + 1
+
+        health = (
+            CONNECTOR_HEALTH_UNAVAILABLE
+            if failure_count >= 3
+            else CONNECTOR_HEALTH_DEGRADED
+        )
+
+        self._health[connector_name] = ConnectorHealthState(
+            connector_name=connector_name,
+            health=health,
+            failure_count=failure_count,
+            success_count=old.success_count if old else 0,
+            last_latency_ms=old.last_latency_ms if old else None,
+            last_error=error,
+        )
+
+    def get_connector_health(
+        self,
+        connector_name: Optional[str] = None,
+    ) -> Dict[str, ConnectorHealthState] | Optional[ConnectorHealthState]:
+        if connector_name:
+            return self._health.get(self._safe_connector_name(connector_name))
+        return dict(self._health)
+
+    # --------------------------------------------------------
+    # RECORDING
+    # --------------------------------------------------------
+
+    def _record_result(
+        self,
+        result: ConnectorExecutionResult,
+        *,
+        context: Optional[Dict[str, Any]] = None,
+    ) -> None:
+        self._results.append(result)
+        self._write_to_memory(result, context=context)
+        self._write_to_lineage(result, context=context)
+        self._write_to_evidence(result, context=context)
+        self._emit_event(result, context=context)
+
+    def _write_to_memory(
+        self,
+        result: ConnectorExecutionResult,
+        *,
+        context: Optional[Dict[str, Any]] = None,
+    ) -> None:
+        memory = self.operational_memory_engine
+        if memory is None:
             return
 
-        time.sleep(self.retry_delay_ms / 1000)
+        payload = {
+            "type": "CONNECTOR_EXECUTION_RESULT",
+            "result": asdict(result),
+            "context": context or {},
+        }
 
-    def _looks_like_auth_failure(self, error: str) -> bool:
-        lower = error.lower()
-        return any(
-            token in lower
-            for token in [
-                "401",
-                "403",
-                "unauthorized",
-                "forbidden",
-                "invalid_client",
-                "invalid_grant",
-                "token",
-                "auth",
-            ]
+        try:
+            if hasattr(memory, "append_memory"):
+                memory.append_memory(payload)
+            elif hasattr(memory, "record"):
+                memory.record(payload)
+            elif hasattr(memory, "write"):
+                memory.write(payload)
+        except Exception as exc:
+            print(f"⚠️ Connector fabric memory write failed: {exc}")
+
+    def _write_to_lineage(
+        self,
+        result: ConnectorExecutionResult,
+        *,
+        context: Optional[Dict[str, Any]] = None,
+    ) -> None:
+        lineage = self.lineage_engine
+        if lineage is None:
+            return
+
+        payload = {
+            "lineage_type": "EXECUTION",
+            "lineage_status": "RECORDED",
+            "source_engine": self.fabric_name,
+            "summary": result.rationale,
+            "severity": "HIGH" if result.rollback_recommended else "INFO",
+            "confidence": 1.0 if result.status == EXECUTION_STATUS_VERIFIED else 0.75,
+            "mission_priority": 0,
+            "tenant_id": result.tenant_id,
+            "case_id": result.case_id,
+            "correlation_id": result.correlation_id,
+            "constraints": [
+                "verification_required"
+                if result.verification_required
+                else "verification_not_required"
+            ],
+            "context": {
+                "type": "CONNECTOR_EXECUTION_RESULT",
+                "result": asdict(result),
+                "context": context or {},
+            },
+            "metadata": {
+                "status": result.status,
+                "selected_connector": result.selected_connector,
+                "failover_used": result.failover_used,
+                "rollback_recommended": result.rollback_recommended,
+            },
+        }
+
+        try:
+            if hasattr(lineage, "record_lineage"):
+                lineage.record_lineage(payload)
+            elif hasattr(lineage, "append_lineage"):
+                lineage.append_lineage(payload)
+            elif hasattr(lineage, "record"):
+                lineage.record(payload)
+        except Exception as exc:
+            print(f"⚠️ Connector fabric lineage write failed: {exc}")
+
+    def _write_to_evidence(
+        self,
+        result: ConnectorExecutionResult,
+        *,
+        context: Optional[Dict[str, Any]] = None,
+    ) -> None:
+        evidence = self.fedramp_evidence_lineage_engine
+        if evidence is None:
+            return
+
+        evidence_type = (
+            "VERIFICATION_RESULT"
+            if result.verification_required
+            else "DECISION_ROUTE_PLAN"
         )
 
-    def _last_error(self, attempts: List[ConnectorExecutionAttempt]) -> Optional[str]:
-        for attempt in reversed(attempts):
-            if attempt.error:
-                return attempt.error
-            if attempt.message:
-                return attempt.message
-        return None
+        payload = {
+            "evidence_type": evidence_type,
+            "evidence_status": (
+                "VERIFIED"
+                if result.status == EXECUTION_STATUS_VERIFIED
+                else "RECORDED"
+            ),
+            "source_engine": self.fabric_name,
+            "summary": result.rationale,
+            "severity": "HIGH" if result.rollback_recommended else "INFO",
+            "confidence": 1.0 if result.status == EXECUTION_STATUS_VERIFIED else 0.75,
+            "mission_priority": 0,
+            "tenant_id": result.tenant_id,
+            "case_id": result.case_id,
+            "correlation_id": result.correlation_id,
+            "constraints": [
+                "post_execution_verification"
+                if result.verification_required
+                else "verification_not_required"
+            ],
+            "evidence_payload": {
+                "type": "CONNECTOR_EXECUTION_RESULT",
+                "result": asdict(result),
+                "context": context or {},
+            },
+            "metadata": {
+                "selected_connector": result.selected_connector,
+                "attempted_connectors": list(result.attempted_connectors),
+                "failover_used": result.failover_used,
+                "rollback_recommended": result.rollback_recommended,
+            },
+        }
 
-    def _result_payload(self, result: ConnectorFabricResult) -> Dict[str, Any]:
-        payload = result.__dict__.copy()
+        try:
+            if hasattr(evidence, "record_evidence"):
+                evidence.record_evidence(payload)
+            elif hasattr(evidence, "append_evidence"):
+                evidence.append_evidence(payload)
+            elif hasattr(evidence, "record"):
+                evidence.record(payload)
+        except Exception as exc:
+            print(f"⚠️ Connector fabric evidence write failed: {exc}")
 
-        payload["attempts"] = [
-            attempt.__dict__
-            for attempt in result.attempts
-        ]
+    def _emit_event(
+        self,
+        result: ConnectorExecutionResult,
+        *,
+        context: Optional[Dict[str, Any]] = None,
+    ) -> None:
+        if self.event_bus is None:
+            return
 
-        connector_result = payload.get("connector_result")
-        if connector_result is not None and hasattr(connector_result, "__dict__"):
-            payload["connector_result"] = connector_result.__dict__
+        payload = {
+            "event_type": "CONNECTOR_EXECUTION_RESULT",
+            "fabric_name": self.fabric_name,
+            "result": asdict(result),
+            "context": context or {},
+        }
 
-        return payload
+        try:
+            if hasattr(self.event_bus, "emit"):
+                self.event_bus.emit("CONNECTOR_EXECUTION_RESULT", payload)
+            elif hasattr(self.event_bus, "publish"):
+                self.event_bus.publish("CONNECTOR_EXECUTION_RESULT", payload)
+        except Exception as exc:
+            print(f"⚠️ Connector fabric event emit failed: {exc}")
+
+    # --------------------------------------------------------
+    # SNAPSHOTS
+    # --------------------------------------------------------
+
+    def get_recent_results(
+        self,
+        *,
+        limit: int = 25,
+    ) -> List[ConnectorExecutionResult]:
+        limit = max(1, int(limit))
+        return list(reversed(self._results[-limit:]))
+
+    def snapshot(self) -> ConnectorExecutionFabricSnapshot:
+        last = self._results[-1] if self._results else None
+
+        return ConnectorExecutionFabricSnapshot(
+            fabric_name=self.fabric_name,
+            total_packages_seen=self._packages_seen,
+            total_results_created=len(self._results),
+            registered_connectors=sorted(self.connectors.keys()),
+            last_result_id=last.result_id if last else None,
+            last_status=last.status if last else None,
+            last_selected_connector=last.selected_connector if last else None,
+            last_updated_ms=int(time.time() * 1000),
+        )
+
+    # --------------------------------------------------------
+    # HELPERS
+    # --------------------------------------------------------
+
+    def _blocked_or_deferred_result(
+        self,
+        pkg: Dict[str, Any],
+        status: str,
+    ) -> ConnectorExecutionResult:
+        return ConnectorExecutionResult(
+            result_id=str(uuid.uuid4()),
+            execution_package_id=pkg.get("execution_package_id"),
+            status=(
+                EXECUTION_STATUS_BLOCKED
+                if status == "BLOCKED"
+                else EXECUTION_STATUS_DEFERRED
+            ),
+            action_type=self._safe_action_type(pkg.get("action_type")),
+            selected_connector=self._safe_connector_name(
+                pkg.get("selected_connector")
+            ),
+            attempted_connectors=[],
+            failover_used=False,
+            verification_required=bool(
+                pkg.get("verification_metadata", {}).get(
+                    "verification_required",
+                    True,
+                )
+            ),
+            verification_succeeded=None,
+            rollback_recommended=False,
+            rationale=f"Connector execution not allowed. Preflight status: {status}.",
+            connector_response={},
+            tenant_id=pkg.get("tenant_id"),
+            case_id=pkg.get("case_id"),
+            correlation_id=pkg.get("correlation_id"),
+        )
+
+    @staticmethod
+    def _package_to_dict(package: Any) -> Dict[str, Any]:
+        if isinstance(package, dict):
+            return dict(package)
+
+        if hasattr(package, "__dataclass_fields__"):
+            return asdict(package)
+
+        if hasattr(package, "__dict__"):
+            return dict(package.__dict__)
+
+        raise TypeError("Unsupported execution package type.")
+
+    @staticmethod
+    def _normalize_connector_response(response: Any) -> Dict[str, Any]:
+        if response is None:
+            return {"success": True, "response": None}
+
+        if isinstance(response, dict):
+            return dict(response)
+
+        if hasattr(response, "__dataclass_fields__"):
+            return asdict(response)
+
+        if hasattr(response, "__dict__"):
+            return dict(response.__dict__)
+
+        return {"success": True, "response": response}
+
+    @staticmethod
+    def _result_rationale(
+        pkg: Dict[str, Any],
+        connector_name: str,
+        status: str,
+        failover_used: bool,
+    ) -> str:
+        return (
+            f"Execution package {pkg.get('execution_package_id')} routed to "
+            f"{connector_name}. Status: {status}. "
+            f"Failover used: {failover_used}."
+        )
+
+    @staticmethod
+    def _safe_connector_name(value: Any) -> str:
+        value = str(value or ConnectorTarget.GENERIC_CONNECTOR.value).upper()
+        valid = {item.value for item in ConnectorTarget}
+        return value if value in valid else value
+
+    @staticmethod
+    def _safe_action_type(value: Any) -> str:
+        value = str(value or ConnectorExecutionAction.UNKNOWN.value).upper()
+        valid = {item.value for item in ConnectorExecutionAction}
+        return value if value in valid else ConnectorExecutionAction.UNKNOWN.value
+
+    @staticmethod
+    def _clamp_confidence(value: Any) -> float:
+        try:
+            score = float(value)
+        except Exception:
+            score = 0.0
+        return max(0.0, min(1.0, score))
 
 
 # ============================================================
-# SINGLETON
+# FACTORY
 # ============================================================
 
-_DEFAULT_FABRIC: Optional[ConnectorExecutionFabric] = None
-
-
-def get_connector_execution_fabric(
+def build_connector_execution_fabric(
+    *,
     connectors: Optional[Dict[str, Any]] = None,
-    config: Optional[Dict[str, Any]] = None,
+    event_bus: Optional[Any] = None,
+    operational_memory_engine: Optional[Any] = None,
+    lineage_engine: Optional[Any] = None,
+    fedramp_evidence_lineage_engine: Optional[Any] = None,
+    max_retry_attempts: int = 1,
+    allow_failover: bool = True,
 ) -> ConnectorExecutionFabric:
-    global _DEFAULT_FABRIC
-
-    if _DEFAULT_FABRIC is None:
-        _DEFAULT_FABRIC = ConnectorExecutionFabric(
-            connectors=connectors,
-            config=config,
-        )
-
-    elif connectors:
-        _DEFAULT_FABRIC.connectors.update(connectors)
-
-    return _DEFAULT_FABRIC
+    return ConnectorExecutionFabric(
+        connectors=connectors,
+        event_bus=event_bus,
+        operational_memory_engine=operational_memory_engine,
+        lineage_engine=lineage_engine,
+        fedramp_evidence_lineage_engine=fedramp_evidence_lineage_engine,
+        max_retry_attempts=max_retry_attempts,
+        allow_failover=allow_failover,
+    )

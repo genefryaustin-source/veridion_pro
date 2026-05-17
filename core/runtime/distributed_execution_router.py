@@ -19,7 +19,9 @@ import time
 import uuid
 from dataclasses import asdict, dataclass, field
 from typing import Any, Dict, List, Optional
-
+from core.runtime.sovereign_execution_controller import (
+    get_sovereign_execution_controller,
+)
 
 JOB_TYPE_ACTION = "ACTION"
 JOB_TYPE_GRAPH = "GRAPH"
@@ -76,6 +78,7 @@ class DistributedExecutionRouter:
         *,
         queue: Any = None,
         worker_orchestrator: Any = None,
+        sovereign_execution_controller=None,
         storage: Any = None,
         event_bus: Any = None,
     ) -> None:
@@ -90,6 +93,14 @@ class DistributedExecutionRouter:
             storage,
             "backpressure_controller",
             None,
+        )
+        self.sovereign_execution_controller = (
+                sovereign_execution_controller
+                or getattr(
+            storage,
+            "sovereign_execution_controller",
+            None,
+            )
         )
     # ========================================================
     # MAIN ROUTING
@@ -176,7 +187,22 @@ class DistributedExecutionRouter:
         job = best["job"]
         worker = best["worker"]
         required_capability = best.get("required_capability")
+        sovereign_block = self._sovereign_guard_route(
+            tenant_id=tenant_id or "default",
+            workload={
+                "source": "distributed_execution_router",
+            },
+            capability=required_capability,
+        )
 
+        if sovereign_block:
+            return self._decision(
+                accepted=False,
+                status=ROUTE_BLOCKED,
+                reason=sovereign_block.get("reason"),
+                tenant_id=tenant_id,
+                metadata=sovereign_block,
+            )
         leased = self.queue.lease_next(
             worker_id=worker.worker_id,
             tenant_id=job.get("tenant_id"),
@@ -263,7 +289,23 @@ class DistributedExecutionRouter:
                 max_routes,
                 pressure.max_routes,
             )
+        sovereign_block = self._sovereign_guard_route(
+            tenant_id=tenant_id or "default",
+            workload={
+                "source": "distributed_execution_router_batch",
+            },
+        )
 
+        if sovereign_block:
+            return [
+                self._decision(
+                    accepted=False,
+                    status=ROUTE_BLOCKED,
+                    reason=sovereign_block.get("reason"),
+                    tenant_id=tenant_id,
+                    metadata=sovereign_block,
+                )
+            ]
         decisions = []
 
         for _ in range(max_routes):
@@ -278,6 +320,129 @@ class DistributedExecutionRouter:
                 break
 
         return decisions
+
+    def _sovereign_guard_route(
+            self,
+            *,
+            tenant_id: str = "default",
+            job: Any = None,
+            workload: Optional[Dict[str, Any]] = None,
+            capability: Optional[str] = None,
+            action: Optional[str] = None,
+            agent_name: Optional[str] = None,
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Enforce sovereign execution before routing.
+
+        Returns:
+            None when allowed.
+            Dict payload when blocked/requires approval.
+        """
+
+        controller = getattr(
+            self,
+            "sovereign_execution_controller",
+            None,
+        )
+
+        if controller is None:
+            return None
+
+        payload = dict(workload or {})
+
+        if job is not None:
+            try:
+                job_payload = getattr(job, "payload", None) or {}
+                if isinstance(job_payload, dict):
+                    payload.update(job_payload)
+            except Exception:
+                pass
+
+            try:
+                action = action or getattr(job, "action", None)
+            except Exception:
+                pass
+
+            try:
+                tenant_id = (
+                        tenant_id
+                        or getattr(job, "tenant_id", None)
+                        or "default"
+                )
+            except Exception:
+                tenant_id = tenant_id or "default"
+
+            try:
+                capability = (
+                        capability
+                        or getattr(job, "required_capability", None)
+                        or getattr(job, "capability", None)
+                        or payload.get("capability")
+                )
+            except Exception:
+                pass
+
+        try:
+            decision = controller.guard_route(
+                tenant_id=tenant_id or "default",
+                workload=payload,
+                capability=capability,
+                action=action,
+                agent_name=agent_name,
+            )
+
+            decision_payload = (
+                decision.to_dict()
+                if hasattr(decision, "to_dict")
+                else dict(decision)
+            )
+
+            if decision_payload.get("allowed"):
+                self._emit(
+                    "SOVEREIGN_ROUTE_ALLOWED",
+                    {
+                        "tenant_id": tenant_id,
+                        "decision": decision_payload,
+                    },
+                )
+                return None
+
+            event_type = "SOVEREIGN_ROUTE_BLOCKED"
+
+            if decision_payload.get("decision") == "REQUIRES_APPROVAL":
+                event_type = "SOVEREIGN_ROUTE_REQUIRES_APPROVAL"
+
+            self._emit(
+                event_type,
+                {
+                    "tenant_id": tenant_id,
+                    "decision": decision_payload,
+                },
+            )
+
+            return {
+                "blocked": True,
+                "reason": decision_payload.get(
+                    "reason",
+                    "Sovereign execution blocked routing.",
+                ),
+                "sovereign_decision": decision_payload,
+            }
+
+        except Exception as exc:
+            self._emit(
+                "SOVEREIGN_ROUTE_GUARD_ERROR",
+                {
+                    "tenant_id": tenant_id,
+                    "error": str(exc),
+                },
+            )
+
+            return {
+                "blocked": True,
+                "reason": f"Sovereign route guard failed: {exc}",
+                "sovereign_error": str(exc),
+            }
 
     # ========================================================
     # JOB / WORKER SELECTION
@@ -544,6 +709,7 @@ def get_distributed_execution_router(
     *,
     queue: Any = None,
     worker_orchestrator: Any = None,
+    sovereign_execution_controller: Any = None,
     storage: Any = None,
     event_bus: Any = None,
     reset: bool = False,
@@ -556,6 +722,8 @@ def get_distributed_execution_router(
             worker_orchestrator=worker_orchestrator,
             storage=storage,
             event_bus=event_bus,
+            sovereign_execution_controller=sovereign_execution_controller,
+
         )
 
     return _DEFAULT_ROUTER

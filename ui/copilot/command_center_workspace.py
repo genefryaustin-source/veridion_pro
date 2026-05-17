@@ -1,48 +1,26 @@
 import streamlit as st
 
-from ui.copilot.autonomous_control_panel import (
-    render_autonomous_control_panel,
-)
+from ui.copilot.autonomous_control_panel import (render_autonomous_control_panel,)
 
-from ui.copilot.execution_timeline import (
-    render_execution_timeline,
-)
+from ui.copilot.execution_timeline import (render_execution_timeline,)
 
-from ui.copilot.governance_queue import (
-    render_governance_queue,
-)
+from ui.copilot.governance_queue import (render_governance_queue,)
 
-from ui.copilot.forensic_replay_panel import (
-    render_forensic_replay_panel,
-)
+from ui.copilot.forensic_replay_panel import (render_forensic_replay_panel,)
 
-from ui.copilot.operational_memory_panel import (
-    render_operational_memory_panel,
-)
+from ui.copilot.operational_memory_panel import (render_operational_memory_panel,)
 
-from ui.copilot.policy_insight_panel import (
-    render_policy_insight_panel,
-)
+from ui.copilot.policy_insight_panel import (render_policy_insight_panel,)
 
-from ui.copilot.autonomous_operations_panel import (
-    render_autonomous_operations_panel,
-)
+from ui.copilot.autonomous_operations_panel import (render_autonomous_operations_panel,)
 
-from ui.copilot.governance_heatmap import (
-    render_governance_heatmap,
-)
+from ui.copilot.governance_heatmap import (render_governance_heatmap,)
 
-from ui.copilot.live_execution_stream import (
-    render_live_execution_stream,
-)
+from ui.copilot.live_execution_stream import (render_live_execution_stream,)
 
-from ui.copilot.multi_agent_console import (
-    render_multi_agent_console,
-)
+from ui.copilot.multi_agent_console import (render_multi_agent_console,)
 
-from ui.copilot.autonomous_soc_dashboard import (
-    render_autonomous_soc_dashboard,
-)
+from ui.copilot.autonomous_soc_dashboard import (render_autonomous_soc_dashboard,)
 
 try:
     from core.events.event_subscribers import (
@@ -51,23 +29,17 @@ try:
 except Exception:
     initialize_event_subscribers = None
 
-from ui.copilot.distributed_operations_map import (
-    render_distributed_operations_map,
-)
+from ui.copilot.distributed_operations_map import (render_distributed_operations_map,)
 from ui.copilot.autonomous_execution_grid import render_autonomous_execution_grid
 from ui.copilot.connector_operations_console import render_connector_operations_console
 from ui.copilot.governance_war_room import render_governance_war_room
-from ui.copilot.safety_guardrails_console import (
-    render_safety_guardrails_console,
-)
-from ui.copilot.agent_operations_console import (
-    render_agent_operations_console,
-)
-from ui.copilot.distributed_agent_fabric_console import (
-    render_distributed_agent_fabric_console,
-)
-from ui.copilot.mission_planner_console import (
-    render_mission_planner_console,
+from ui.copilot.safety_guardrails_console import (render_safety_guardrails_console,)
+from ui.copilot.agent_operations_console import (render_agent_operations_console,)
+from ui.copilot.distributed_agent_fabric_console import (render_distributed_agent_fabric_console,)
+from ui.copilot.mission_planner_console import (render_mission_planner_console,)
+
+from ui.copilot.sovereign_autonomy_governance_dashboard import (
+    render_sovereign_autonomy_governance_dashboard,
 )
 # ============================================================
 # COMMAND CENTER WORKSPACE
@@ -120,6 +92,7 @@ def render_command_center_workspace(storage):
         tab_agents,
         tab_fabric,
         tab_mission_planner,
+        tab_sovereign_governance,
     ) = st.tabs([
         "Control",
         "Live Execution",
@@ -137,6 +110,7 @@ def render_command_center_workspace(storage):
         "Agents",
         "Fabric",
         "Mission Planner",
+        "Sovereign Governance",
     ])
 
     # ========================================================
@@ -305,9 +279,43 @@ def render_command_center_workspace(storage):
         render_distributed_agent_fabric_console(
             storage
         )
+    # ========================================================
+    # MISSION PLANNER TAB
+    # ========================================================
 
     with tab_mission_planner:
 
-        render_mission_planner_console(
-            storage
-        )
+        try:
+
+            render_mission_planner_console(
+                storage
+            )
+
+        except Exception as e:
+
+            st.error(
+                f"Mission Planner error: {e}"
+            )
+    # ========================================================
+    # SOVEREIGN GOVERNANCE TAB
+    # ========================================================
+
+    with tab_sovereign_governance:
+
+        try:
+
+            runtime_fabric = getattr(
+                storage,
+                "runtime_fabric",
+                None,
+            )
+
+            render_sovereign_autonomy_governance_dashboard(
+                runtime_fabric=runtime_fabric,
+            )
+
+        except Exception as e:
+
+            st.error(
+                f"Sovereign Governance Dashboard error: {e}"
+            )

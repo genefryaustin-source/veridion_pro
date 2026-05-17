@@ -1,8 +1,9 @@
 # -----------------------------
 # Core App
 # -----------------------------
-streamlit==1.37.0
-pandas==2.2.2
+streamlit
+pandas
+
 numpy==1.26.4
 
 # -----------------------------
@@ -81,7 +82,7 @@ pdfplumber
 beautifulsoup4
 
 pytesseract
-Pillow
+pillow>=11.0.0
 pdf2image
 
 # https://github.com/UB-Mannheim/tesseract/wiki
@@ -92,4 +93,6 @@ openpyxl
 
 networkx
 pyvis
+
+streamlit-agraph
 
