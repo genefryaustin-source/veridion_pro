@@ -1,4 +1,10 @@
 # app.py
+import sys
+from pathlib import Path
+
+# Add the project root to Python path so "core." imports work on Streamlit Cloud
+ROOT_DIR = Path(__file__).parent.resolve()
+sys.path.insert(0, str(ROOT_DIR))
 
 import streamlit as st
 
