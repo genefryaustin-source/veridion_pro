@@ -2,10 +2,22 @@
 import sys
 from pathlib import Path
 
-# Add the project root to Python path so "core." imports work on Streamlit Cloud
+# === CRITICAL: Add project root to Python path ===
 ROOT_DIR = Path(__file__).parent.resolve()
 sys.path.insert(0, str(ROOT_DIR))
 
+import streamlit as st
+
+# === FIXED & SAFER IMPORTS (avoid circular import issues) ===
+try:
+    from core.runtime.runtime_bootstrap import bootstrap_runtime
+    from core.runtime.sovereign_runtime_bootstrap import build_sovereign_live_runtime_state_engine
+except ImportError as e:
+    st.error(f"Import Error: {e}")
+    st.stop()
+
+# Optional: Import other things you need
+# from core.runtime.runtime_cognition_bootstrap import ...
 import streamlit as st
 
 from core.db.bootstrap import bootstrap_database
