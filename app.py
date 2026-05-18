@@ -22,8 +22,8 @@ for path in POSSIBLE_ROOTS:
 
 import streamlit as st
 
-st.info(f"🔍 Working directory: {Path.cwd()}")
-st.info(f"🔍 Python path root: {ROOT_DIR}")
+#st.info(f"🔍 Working directory: {Path.cwd()}")
+#st.info(f"🔍 Python path root: {ROOT_DIR}")
 
 # =============================================
 # IMPORTS
